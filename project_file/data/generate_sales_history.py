@@ -16,7 +16,6 @@ def get_probabilities():
         5: [0.40, 0.00, 0.00, 0.05, 0.15, 0.30, 0.10],
         6: [0.50, 0.00, 0.00, 0.05, 0.10, 0.15, 0.20]
     }
-    
     return probabilities
 
 def generate_shipment_history(probabilities, date_format, start_date, sales_rates_df, end_date=date.today(), shipment_history_path="shipment_history.csv"):
