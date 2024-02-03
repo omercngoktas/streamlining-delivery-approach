@@ -3,11 +3,13 @@ from get_location_details import get_depot, get_stores
 from find_missing import find_missing_results
 import pandas as pd
 import threading
+import time
 
 # Initialize semaphore with desired concurrency limit
-semaphore = threading.Semaphore(20)  # Limit to 5 concurrent threads
+semaphore = threading.Semaphore(10)  # Limit to 5 concurrent threads
 
 def main():
+    start_time = time.time()
     stores = get_stores()
     depot = get_depot()
     # List to store fetched data
@@ -25,16 +27,13 @@ def main():
     for thread in threads:
         thread.join()
     
-    # Process the fetched data
-    for result in results:
-        print(result)
-    
     results.sort(key=lambda x: x[0])
     df = pd.DataFrame(results, columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
     df.to_csv('output.csv', index=False)
     
     find_missing_results(stores, results)
     
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
 def process_data(i, j, stores, results):
