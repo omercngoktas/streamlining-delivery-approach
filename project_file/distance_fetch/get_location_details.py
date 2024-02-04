@@ -1,7 +1,6 @@
 import pandas as pd
 
-def get_stores():
-    file_path = '../data/store/stores.csv'  # Replace 'your_file.csv' with the path to your CSV file
+def get_stores(file_path='../data/store/stores.csv'):
     stores = pd.read_csv(file_path)
     return stores
 

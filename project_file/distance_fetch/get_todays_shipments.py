@@ -13,7 +13,6 @@ def output_stores_with_shipment(shipments):
     
     for index, row in shipments.iterrows():
         if row["shipments"] > 0:
-            print(row["store_id"], row["date"], row["shipments"])
             stores.append(row["store_id"])
     
     output_df = pd.DataFrame(stores, columns=["store_id"])

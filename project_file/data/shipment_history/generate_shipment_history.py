@@ -58,7 +58,7 @@ def generate_shipment_history(probabilities, date_format, start_date, sales_rate
     
     return shipment_history_df
 
-def main():
+def generate_history_till_today():
     shipment_history_path = "shipment_history.csv"
     sales_rates_df = pd.read_csv("sales_rates.csv")
     probabilities = get_probabilities()
@@ -74,4 +74,5 @@ def main():
     shipment_history_df.to_csv(shipment_history_path, index=False)
 
 if __name__ == "__main__":
-    main()
+    generate_history_till_today()
+    print("Shipment history generated successfully")
