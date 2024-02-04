@@ -6,7 +6,7 @@ import threading
 import time
 
 # Initialize semaphore with desired concurrency limit
-semaphore = threading.Semaphore(10)  # Limit to 5 concurrent threads
+semaphore = threading.Semaphore(30)  # Limit to 5 concurrent threads
 
 def main():
     start_time = time.time()
