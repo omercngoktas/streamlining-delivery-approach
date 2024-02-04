@@ -10,9 +10,9 @@ import datetime
 
 file_lock = multiprocessing.Lock()
 
-def process_state_stores(i, j, stores):
-    travel_time, distance = fetch_duration_and_distance(stores.iloc[i]['latitude'], stores.iloc[i]['longitude'], stores.iloc[j]['latitude'], stores.iloc[j]['longitude'])
-    output_df = pd.DataFrame([[stores.iloc[i]['store_id'], stores.iloc[i]['latitude'], stores.iloc[i]['longitude'], travel_time, distance, stores.iloc[j]['store_id'], stores.iloc[j]['latitude'], stores.iloc[j]['longitude']]], columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
+def process_state_stores(current_store, next_store):
+    travel_time, distance = fetch_duration_and_distance(current_store['latitude'], current_store['longitude'], next_store['latitude'], next_store['longitude'])
+    output_df = pd.DataFrame([[current_store['store_id'], current_store['latitude'], current_store['longitude'], travel_time, distance, next_store['store_id'], next_store['latitude'], next_store['longitude']]], columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
     # if any element of the output_df is None, then skip the write to the file
     if output_df.isnull().values.any():
         print("Skipping write to file")
@@ -31,10 +31,9 @@ def arrange_stores(stores, stores_with_shipment):
     
     return arranged_stores
 
-
-def process_state_depot_stores(i, depot_df, stores):
-    travel_time, distance = fetch_duration_and_distance(depot_df.iloc[0]['latitude'], depot_df.iloc[0]['longitude'], stores.iloc[i]['latitude'], stores.iloc[i]['longitude'])
-    output_df = pd.DataFrame([[depot_df.iloc[0]['depot_id'], depot_df.iloc[0]['latitude'], depot_df.iloc[0]['longitude'], travel_time, distance, stores.iloc[i]['store_id'], stores.iloc[i]['latitude'], stores.iloc[i]['longitude']]], columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
+def process_state_depot(depot, current_store):
+    travel_time, distance = fetch_duration_and_distance(depot['latitude'], depot['longitude'], current_store['latitude'], current_store['longitude'])
+    output_df = pd.DataFrame([[depot['depot_id'], depot['latitude'], depot['longitude'], travel_time, distance, current_store['store_id'], current_store['latitude'], current_store['longitude']]], columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
     # if any element of the output_df is None, then skip the write to the file
     if output_df.isnull().values.any():
         print("Skipping write to file")
@@ -44,41 +43,60 @@ def process_state_depot_stores(i, depot_df, stores):
         print("Output: ", output_df.values.tolist())
         output_df.to_csv("depot_output.csv", mode="a", index=False, header=not os.path.exists("depot_output.csv"))
 
-def main():
-    today = datetime.date.today()
-
-    start_time = time.time()
-    get_days_shipment_output(today.day, today.month, today.year)
-    stores = get_stores(file_path="../data/store/stores.csv")
-    stores_with_shipment = get_stores("./stores_with_shipment.csv")
-    arranged_stores = arrange_stores(stores, stores_with_shipment)
-    stores_to_visit = pd.DataFrame(arranged_stores, columns=["store_id", "latitude", "longitude"])
-    depot_df = get_depot()
-    output_df = pd.DataFrame(columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
-    output_df.to_csv("stores_output.csv", index=False)
-    output_df.to_csv("depot_output.csv", index=False)
-
-    cpu_count = multiprocessing.cpu_count()
-    print("Number of CPU cores: ", cpu_count)
-    pool = multiprocessing.Pool(processes=24)
-
-    # Create a list of argument tuples for all combinations of i and j
-    args_list = [(i, j, stores_to_visit) for i in range(len(stores_to_visit)) for j in range(len(stores_to_visit)) if i != j]
-    # Use pool.starmap() to execute process_state_stores() with each set of arguments
+def create_pool_for_stores(cpu_count, stores, current_store):
+    print("Creating pool for store ", current_store["store_id"])
+    
+    args_list = []
+    
+    for index, next_store in stores.iterrows():
+        if next_store["store_id"] != current_store["store_id"]:
+            args_list.append((current_store, next_store))
+    
+    pool = multiprocessing.Pool(processes=cpu_count)
     pool.starmap(process_state_stores, args_list)
     pool.close()
     pool.join()
-    get_output = pd.read_csv("stores_output.csv")
-    results = get_output.values.tolist()
-    find_missing_results(stores_to_visit, results)
+
+def create_pool_for_depot(cpu_count, stores, depot):
+    print("Creating pool for depot ", depot["depot_id"])
+    args_list = []
     
-    args_list_depot = [(i, depot_df, stores_to_visit) for i in range(len(stores_to_visit))]
-    pool.starmap(process_state_depot_stores, args_list_depot)
+    for index, next_store in stores.iterrows():
+        args_list.append((depot, next_store))
+    
+    pool = multiprocessing.Pool(processes=cpu_count)
+    pool.starmap(process_state_depot, args_list)
     pool.close()
     pool.join()
-    get_output = pd.read_csv("depot_output.csv")
-    depot_results = get_output.values.tolist()
-    find_missing_results(depot_df, depot_results)
+
+def main():
+    today = datetime.date.today()
+    start_time = time.time()
+    get_days_shipment_output(today.day, today.month, today.year)
+    
+    depot_df = get_depot()
+    stores = get_stores(file_path="../data/store/stores.csv")
+    stores_with_shipment = get_stores("./stores_with_shipment.csv")
+    
+    arranged_stores = arrange_stores(stores, stores_with_shipment)
+    stores_to_visit = pd.DataFrame(arranged_stores, columns=["store_id", "latitude", "longitude"])
+    output_df = pd.DataFrame(columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
+    output_df.to_csv("stores_output.csv", index=False)
+    output_df.to_csv("depot_output.csv", index=False)
+    
+    cpu_count = 24
+    
+    create_pool_for_stores(cpu_count, stores_to_visit, stores_to_visit.iloc[0])
+    create_pool_for_depot(cpu_count, stores_to_visit, depot_df.iloc[0])
+    
+    # get_output = pd.read_csv("stores_output.csv")
+    # results = get_output.values.tolist()
+    # find_missing_results(stores_to_visit, results)
+    
+    # get_output = pd.read_csv("depot_output.csv")
+    # depot_results = get_output.values.tolist()
+    # find_missing_results(depot_df, depot_results)
+    
     
     
     print('All processes completed in ', time.time() - start_time, ' seconds')
