@@ -24,7 +24,6 @@ def fetch_duration_and_distance(latitude1, longitude1, latitude2, longitude2):
     driver = webdriver.Chrome(options=chrome_options)
     driver.get(url)
     wait = WebDriverWait(driver, 3)
-    time.sleep(0.5)
     try:
         duration = wait.until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[2]/div[3]/div[8]/div[9]/div/div/div[1]/div[2]/div/div[1]/div/div/div[4]/div[1]/div[1]/div/div[1]/div[1]")))
         distance = wait.until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[2]/div[3]/div[8]/div[9]/div/div/div[1]/div[2]/div/div[1]/div/div/div[4]/div[1]/div[1]/div/div[1]/div[2]/div")))

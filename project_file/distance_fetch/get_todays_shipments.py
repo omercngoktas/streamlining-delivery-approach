@@ -16,9 +16,9 @@ def output_stores_with_shipment(shipments):
             stores.append(row["store_id"])
     
     output_df = pd.DataFrame(stores, columns=["store_id"])
-    output_df.to_csv("stores_with_shipment.csv", index=False)
+    output_df.to_csv("./output/stores_with_shipment.csv", index=False)
 
 def get_days_shipment_output(day, month, year):
-    shipment_history_path = "../data/shipment_history/shipment_history.csv"
+    shipment_history_path = "./data/shipment_history/shipment_history.csv"
     days_shipments = get_shipment_at_date(day, month, year, shipment_history_path)
     output_stores_with_shipment(days_shipments)
