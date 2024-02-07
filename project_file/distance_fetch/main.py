@@ -1,36 +1,13 @@
-from selenium_fetcher import fetch_duration_and_distance
-from get_location_details import get_depot, get_stores
-from find_missing import find_missing_results
-from get_todays_shipments import get_days_shipment_output
-from data.shipment_history.generate_shipment_history import generate_history_till_today
+from GoogleMaps import GoogleMapsHandler
+from LocationManager import LocationManager
+from ShipmentManager import ShipmentManager
+from MultiprocessedFetcher import MultiprocessHandler
 import pandas as pd
-import multiprocessing
 import time
-import os
 import datetime
 
-file_lock = multiprocessing.Lock()
-
-def process_state_stores(current_store, next_store):
-    travel_time, distance = fetch_duration_and_distance(current_store['latitude'], current_store['longitude'], next_store['latitude'], next_store['longitude'])
-    output_df = pd.DataFrame([[current_store['store_id'], current_store['latitude'], current_store['longitude'], travel_time, distance, next_store['store_id'], next_store['latitude'], next_store['longitude']]], columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
-    
-    # Acquire file lock before writing to the file
-    file_lock.acquire()
-    try:
-        # Check if any element of the output_df is None
-        if output_df.isnull().values.any():
-            print("Skipping write to file")
-            return
-
-        print("Output: ", output_df.values.tolist())
-        output_df.to_csv("./output/stores_output.csv", mode="a", index=False, header=not os.path.exists("./output/stores_output.csv"))
-        print("Wrote to file")
-    finally:
-        # Release file lock after writing to the file
-        file_lock.release()
-
-def arrange_stores(stores, stores_with_shipment):
+# return the stores which have shipment
+def get_stores_with_shipments(stores, stores_with_shipment):
     arranged_stores = []
     # if any of the stores in stores is in stores_with_shipment, then add it to arranged_stores
     for index, row in stores.iterrows():
@@ -39,74 +16,64 @@ def arrange_stores(stores, stores_with_shipment):
     
     return arranged_stores
 
-def process_state_depot(depot, current_store):
-    travel_time, distance = fetch_duration_and_distance(depot['latitude'], depot['longitude'], current_store['latitude'], current_store['longitude'])
-    output_df = pd.DataFrame([[depot['depot_id'], depot['latitude'], depot['longitude'], travel_time, distance, current_store['store_id'], current_store['latitude'], current_store['longitude']]], columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
-    # if any element of the output_df is None, then skip the write to the file
-    if output_df.isnull().values.any():
-        print("Skipping write to file")
-        return
-    
-    with file_lock:
-        print("Output: ", output_df.values.tolist())
-        output_df.to_csv("./output/depot_output.csv", mode="a", index=False, header=not os.path.exists("./output/depot_output.csv"))
+def find_missing_results(stores, results):
+    missing_results = []
+    for i in range(len(stores)):
+        for j in range(len(stores)):
+            if i != j:
+                if not any(result[0] == stores.iloc[i]['store_id'] and result[5] == stores.iloc[j]['store_id'] for result in results):
+                    missing_results.append([stores.iloc[i]['store_id'], stores.iloc[j]['store_id']])
+        
+    return missing_results
 
-def create_pool_for_stores(cpu_count, stores, current_store):
-    print("Creating pool for store ", current_store["store_id"])
+def create_csv_files(output_path):
+    output_df = pd.DataFrame(columns=[
+                                'current_id', 
+                                'current_latitude', 
+                                'current_longitude', 
+                                'duration', 
+                                'distance', 
+                                'next_id', 
+                                'next_latitude', 
+                                'next_longitude'
+                            ])
     
-    args_list = []
-    
-    for index, next_store in stores.iterrows():
-        if next_store["store_id"] != current_store["store_id"]:
-            args_list.append((current_store, next_store))
-    
-    pool = multiprocessing.Pool(processes=cpu_count)
-    pool.starmap(process_state_stores, args_list)
-    pool.close()
-    pool.join()
+    output_df.to_csv(f"{output_path}/stores_output.csv", index=False)
+    output_df.to_csv(f"{output_path}/depot_output.csv", index=False)
 
-def create_pool_for_depot(cpu_count, stores, depot):
-    print("Creating pool for depot ", depot["depot_id"])
-    args_list = []
-    
-    for index, next_store in stores.iterrows():
-        args_list.append((depot, next_store))
-    
-    pool = multiprocessing.Pool(processes=cpu_count)
-    pool.starmap(process_state_depot, args_list)
-    pool.close()
-    pool.join()
 
 def main():
+    start_time = time.time()
+    today = datetime.date.today()
+    cpu_count = 12
     output_path = "./output"
     
-    generate_history_till_today()
-    today = datetime.date.today()
-    start_time = time.time()
-    get_days_shipment_output(today.day, today.month, today.year)
+    shipment_manager = ShipmentManager("./data/shipment_history/shipment_history.csv", "./output/stores_with_shipment.csv")
+    location_manager = LocationManager("./data/store/stores.csv", "./data/depot/depots.csv")
+        
+    shipment_manager.get_days_shipment_output(5, 2, 2023)
     
-    depot_df = get_depot()
-    stores = get_stores(file_path="./data/store/stores.csv")
-    stores_with_shipment = get_stores(f"{output_path}/stores_with_shipment.csv")
-    arranged_stores = arrange_stores(stores, stores_with_shipment)
-    stores_to_visit = pd.DataFrame(arranged_stores, columns=["store_id", "latitude", "longitude"])
-    output_df = pd.DataFrame(columns=['current_id', 'current_latitude', 'current_longitude', 'duration', 'distance', 'next_id', 'next_latitude', 'next_longitude'])
-    output_df.to_csv(f"./output/stores_output.csv", index=False)
-    output_df.to_csv(f"./output/depot_output.csv", index=False)
+    depot_df = location_manager.get_depot() # get the depot
+    stores = location_manager.get_stores() # get the stores
+    stores_with_shipment = location_manager.get_stores(f"{output_path}/stores_with_shipment.csv") # get the stores with shipment
     
-    cpu_count = 12
+    stores_shipments_with_details = get_stores_with_shipments(stores, stores_with_shipment) # get the stores with shipment
+    stores_to_visit = pd.DataFrame(stores_shipments_with_details, columns=["store_id", "latitude", "longitude"]) # create a dataframe of the stores with shipment
+    create_csv_files(output_path)
+    
+    multiprocess_handler = MultiprocessHandler(cpu_count=cpu_count, stores=stores, depot=depot_df.iloc[0], stores_with_shipment=stores_to_visit)
+    
     
     for index, current_store in stores_to_visit.iterrows():
-        create_pool_for_stores(cpu_count, stores_to_visit, current_store)
-    
-    
+        multiprocess_handler.current_store = current_store
+        multiprocess_handler.create_pool_for_stores()
     
     get_output = pd.read_csv(f"{output_path}/stores_output.csv")
     results = get_output.values.tolist()
     stores_missing_result = find_missing_results(stores_to_visit, results)
     pd.DataFrame(stores_missing_result, columns=["current_id", "next_id"]).to_csv(f"{output_path}/stores_missing_result.csv", index=False)
     
-    create_pool_for_depot(cpu_count, stores_to_visit, depot_df.iloc[0])
+    multiprocess_handler.create_pool_for_depot()
     get_output = pd.read_csv(f"{output_path}/depot_output.csv")
     depot_results = get_output.values.tolist()
     depot_missing_result = find_missing_results(depot_df, depot_results)

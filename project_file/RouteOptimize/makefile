@@ -1,13 +1,7 @@
-
-
-# Derleyici seçimi
 CC = g++
-
-# Derleme seçenekleri
 CFLAGS = -std=c++11 -Wall -Wextra
 
-# Hedef dosya ve kaynak dosyaları
-TARGET = relative_list_avg_calc
+TARGET = main
 SOURCE_DIR = src
 INCLUDE_DIR = include
 LIB_DIR = lib
@@ -20,7 +14,7 @@ SOURCES = $(wildcard $(SOURCE_DIR)/*.cpp)
 OBJECTS = $(patsubst $(SOURCE_DIR)/%.cpp, $(LIB_DIR)/%.o, $(SOURCES))
 
 # Hedef dosyayı oluşturma
-$(BIN_DIR)/$(TARGET).exe: $(OBJECTS)
+$(BIN_DIR)/$(TARGET).out: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@
 
 # Nesne dosyalarını oluşturma
@@ -29,4 +23,8 @@ $(LIB_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 
 # Temizleme
 clean:
-	rm -f $(LIB_DIR)/*.o $(BIN_DIR)/$(TARGET).exe
+	rm -f $(LIB_DIR)/*.o $(BIN_DIR)/$(TARGET).out
+
+# Derleme ve sonra çalıştırma
+run: $(BIN_DIR)/$(TARGET).out
+	./$(BIN_DIR)/$(TARGET).out
