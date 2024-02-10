@@ -7,6 +7,10 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <stdexcept>
+#include <algorithm>
+#include <cctype>
+
 
 using namespace std;
 

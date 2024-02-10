@@ -9,7 +9,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     StoreManager store_manager;
-    store_manager.readStores("../bin/data/store/stores.csv");
+    store_manager.readStores("./bin/data/store/stores.csv");
     store_manager.printStores();
     return 0;
 }

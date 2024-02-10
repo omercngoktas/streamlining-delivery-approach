@@ -27,4 +27,4 @@ clean:
 
 # Derleme ve sonra çalıştırma
 run: $(BIN_DIR)/$(TARGET).out
-	./$(BIN_DIR)/$(TARGET).out
+	clear && ./$(BIN_DIR)/$(TARGET).out
