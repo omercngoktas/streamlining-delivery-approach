@@ -18,7 +18,7 @@ def get_probabilities():
     }
     return probabilities
 
-def generate_shipment_history(probabilities, date_format, start_date, sales_rates_df, end_date=date.today(), shipment_history_path="shipment_history.csv"):
+def generate_shipment_history(probabilities, date_format, start_date, stores, end_date=date.today(), shipment_history_path="shipment_history.csv"):
     
     if os.path.exists(shipment_history_path):
         existing_shipment_history = pd.read_csv(shipment_history_path)
@@ -29,7 +29,7 @@ def generate_shipment_history(probabilities, date_format, start_date, sales_rate
     
     shipment_history = []
 
-    for index, row in sales_rates_df.iterrows():
+    for index, row in stores.iterrows():
         store_id = row['store_id']
         sales_rate = row['sales_rate']
         
@@ -53,6 +53,15 @@ def generate_shipment_history(probabilities, date_format, start_date, sales_rate
     
     shipment_history_df = pd.DataFrame(shipment_history)
     
+    # recently created shipment history is saved to a new file to insert into the database later
+    try:
+        new_shipment_history_df = shipment_history_df.copy()
+        new_shipment_history_df["date"] = pd.to_datetime(new_shipment_history_df["date"])
+        new_shipment_history_df = new_shipment_history_df.sort_values(by=["date", "shipment_id"])
+        new_shipment_history_df.to_csv("./data/shipment_history/new_shipment_history.csv", index=False)    
+    except Exception as e:
+        print("Error while saving new shipment history:", e)
+    
     if os.path.exists(shipment_history_path):
         shipment_history_df = pd.concat([existing_shipment_history, shipment_history_df])
     
@@ -60,14 +69,14 @@ def generate_shipment_history(probabilities, date_format, start_date, sales_rate
 
 def generate_history_till_today():
     shipment_history_path = "./data/shipment_history/shipment_history.csv"
-    sales_rates_df = pd.read_csv("./data/shipment_history/sales_rates.csv")
+    stores = pd.read_csv("./data/store/stores.csv")
     probabilities = get_probabilities()
     start_date = "2015-01-01"
     end_date = date.today()
     # end_date = "2020-10-01"
     date_format = "%Y-%m-%d"
     
-    shipment_history_df = generate_shipment_history(probabilities, date_format, start_date, sales_rates_df, end_date=end_date, shipment_history_path=shipment_history_path)
+    shipment_history_df = generate_shipment_history(probabilities, date_format, start_date, stores, end_date=end_date, shipment_history_path=shipment_history_path)
     
     shipment_history_df["date"] = pd.to_datetime(shipment_history_df["date"])
     shipment_history_df = shipment_history_df.sort_values(by=["date", "shipment_id"])

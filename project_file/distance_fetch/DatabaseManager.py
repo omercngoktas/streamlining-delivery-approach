@@ -116,6 +116,15 @@ class DBConnection:
         except Exception as e:
             print(f"Error: {e}")
             return None
+    
+    # insert shipment history
+    def insert_shipment_history(self, shipment_id, store_id, date, shipments):
+        try:
+            query = "INSERT INTO shipment_history (shipment_id, store_id, date, shipments) VALUES (%s, %s, %s, %s);"
+            self.cursor.execute(query, (shipment_id, store_id, date, shipments))
+            print(f"Record inserted successfully")
+        except Exception as e:
+            print(f"Error: {e}")
 
 import pandas as pd
 
@@ -130,8 +139,8 @@ def get_data(file_path):
         return None
 
 def insert_data_from_csv(db, depots, stores, vehicles, shipments_history, sales_rates, depot_output, stores_output):
-    if db.is_db_created_recently:
-        return
+    # if db.is_db_created_recently:
+    #     return
     
     # Insert data into the depots table from depot.csv
     for i in range(len(depots)):
@@ -217,6 +226,19 @@ def main():
     depot_output = get_data('./output/depot_output.csv')
     stores_output = get_data('./output/stores_output.csv')
     insert_data_from_csv(db, depots, stores, vehicles, shipments_history, sales_rates, depot_output, stores_output)
+    
+    try:
+        new_shipment_history = get_data('./data/shipment_history/new_shipment_history.csv')
+        for i in range(len(new_shipment_history)):
+            shipment_id = new_shipment_history.loc[i, "shipment_id"]
+            store_id = new_shipment_history.loc[i, "store_id"]
+            date = new_shipment_history.loc[i, "date"]
+            shipments = int(new_shipment_history.loc[i, "shipments"])
+            db.insert_shipment_history(shipment_id, store_id, date, shipments)
+        # delete the content of the new_shipment_history.csv file
+        open('./data/shipment_history/new_shipment_history.csv', 'w').close()
+    except Exception as e:
+        print(e)
     
 if __name__ == "__main__":
     main()
