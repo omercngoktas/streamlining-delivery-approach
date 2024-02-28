@@ -51,25 +51,7 @@ def distance_duration_id_generator(year, month, day):
     truncated_uuid = hex_uuid[:20]
     return f"DD-{truncated_uuid.upper()}-{year}-{month}-{day}"
 
-
-
-def main():
-    # Database connection
-    db = DBConnection("postgres", "9113", "localhost", "5432", "gratis")
-    db.connect()
-    
-    start_time = time.time()
-    today = datetime.date.today()
-    day = today.day
-    month = today.month
-    year = today.year
-    cpu_count = 12
-    output_path = "./data/output"
-    
-    shipment_manager = ShipmentManager("./data/shipment_history/shipment_history.csv", f"{output_path}/stores_with_shipment.csv")
-    location_manager = LocationManager("./data/store/stores.csv", "./data/depot/depots.csv")
-    
-    
+def insert_shipment_history_to_database(db):
     # try to insert the shipment history to the database
     try: 
         # save the recently created shipment history to the database
@@ -80,6 +62,39 @@ def main():
         open("./data/shipment_history/new_shipment_history.csv", "w").close()
     except Exception as e:
         print(e)
+
+def main():
+    # Database connection
+    db = DBConnection("postgres", "9113", "localhost", "5432", "gratis")
+    db.connect()
+    
+    # specifying the day to get the shipment, cpu_count, and output_path
+    start_time = time.time()
+    today = datetime.date.today()
+    day = today.day
+    month = today.month
+    year = today.year
+    cpu_count = 12
+    output_path = "./data/output"
+    
+    # create the shipment manager and the location manager
+    shipment_manager = ShipmentManager("./data/shipment_history/shipment_history.csv", f"{output_path}/stores_with_shipment.csv")
+    location_manager = LocationManager("./data/store/stores.csv", "./data/depot/depots.csv")
+    
+    
+    # # try to insert the shipment history to the database
+    # try: 
+    #     # save the recently created shipment history to the database
+    #     new_shipment_history = pd.read_csv("./data/shipment_history/new_shipment_history.csv")
+    #     for index, row in new_shipment_history.iterrows():
+    #         db.insert("shipment_history", ["shipment_id", "store_id", "date", "shipments"], [str(row[0]), str(row[1]), row[2], int(row[3])])
+    #     # delete the contents of the new_shipment_history.csv
+    #     open("./data/shipment_history/new_shipment_history.csv", "w").close()
+    # except Exception as e:
+    #     print(e)
+    
+    insert_shipment_history_to_database(db)
+    
     
     # the shipment of the day is written to the file
     shipment_manager.days_shipment_to_file(day, month, year)
