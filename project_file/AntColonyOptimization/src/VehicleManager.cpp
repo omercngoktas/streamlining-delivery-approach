@@ -10,3 +10,11 @@ VehicleManager::VehicleManager() {
 VehicleManager::~VehicleManager() {
     cout << "VehicleManager destroyed" << endl;
 }
+
+Vehicle::Vehicle() {
+    cout << "Vehicle created" << endl;
+}
+
+Vehicle::~Vehicle() {
+    cout << "Vehicle destroyed" << endl;
+}

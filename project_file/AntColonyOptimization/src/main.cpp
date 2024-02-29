@@ -1,4 +1,5 @@
 #include <iostream>
+#include "../include/DatabaseManager.h"
 #include "../include/StoreManager.h"
 // #include "../include/DepotManager.h"
 // #include "../include/ShipmentManager.h"

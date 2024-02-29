@@ -10,3 +10,11 @@ DepotManager::DepotManager() {
 DepotManager::~DepotManager() {
     cout << "DepotManager destroyed" << endl;
 }
+
+Depot::Depot() {
+    cout << "Depot created" << endl;
+}
+
+Depot::~Depot() {
+    cout << "Depot destroyed" << endl;
+}

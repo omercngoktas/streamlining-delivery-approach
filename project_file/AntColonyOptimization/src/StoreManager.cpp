@@ -8,6 +8,23 @@ StoreManager::~StoreManager() {
     cout << "StoreManager destroyed" << endl;
 }
 
+Store::Store() {
+    cout << "Store created" << endl;
+}
+
+Store::Store(const string& store_id, const string& store_location, const string& store_address, const double& latitude, const double& longitude, const string& depot_id) {
+    this->store_id = store_id;
+    this->store_location = store_location;
+    this->store_address = store_address;
+    this->latitude = latitude;
+    this->longitude = longitude;
+    this->depot_id = depot_id;
+}
+
+Store::~Store() {
+    cout << "Store destroyed" << endl;
+}
+
 void StoreManager::readStores(const string& filename) {
     ifstream file(filename);
     if (file.is_open()) {

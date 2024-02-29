@@ -7,12 +7,13 @@ class VehicleManager {
     public:
         VehicleManager();
         ~VehicleManager();
-        
 };
 
 class Vehicle {
     public:
-        string vehicle_id, depot_id, status;
+        string vehicle_id;
+        string depot_id;
+        string status;
         int pallette_capacity;
         Vehicle();
         ~Vehicle();

@@ -10,13 +10,15 @@ class DepotManager {
     public:
         DepotManager();
         ~DepotManager();
-        vector<Depot> getDepots();
 };
 
 class Depot {
     public:
-        string depot_id, depot_location, depot_address;
-        double latitude, longitude;
+        string depot_id;
+        string depot_location;
+        string depot_address;
+        double latitude;
+        double longitude;
         Depot();
         ~Depot();
 };

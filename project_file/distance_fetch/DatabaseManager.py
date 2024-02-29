@@ -157,7 +157,8 @@ class DBConnection:
             "shipment_history", [
                 "shipment_id TEXT PRIMARY KEY", 
                 "store_id TEXT", 
-                "date DATE", "shipments INTEGER", 
+                "date DATE",
+                "shipments INTEGER", 
                 "FOREIGN KEY (store_id) REFERENCES stores(store_id)"
             ]
         )
@@ -166,6 +167,7 @@ class DBConnection:
         self.create_table(
             "stores_distances_durations", [
                 "st_dist_dura_id TEXT PRIMARY KEY",
+                "date DATE",
                 "current_id TEXT REFERENCES stores(store_id) ON DELETE CASCADE", 
                 "current_latitude FLOAT", 
                 "current_longitude FLOAT",
@@ -179,7 +181,8 @@ class DBConnection:
         # depots_distances_durations table
         self.create_table(
             "depots_distances_durations", [
-                "dp_dist_dura_id TEXT PRIMARY KEY", 
+                "dp_dist_dura_id TEXT PRIMARY KEY",
+                "date DATE",
                 "depot_id TEXT REFERENCES depots(depot_id) ON DELETE CASCADE", 
                 "depot_latitude FLOAT",
                 "depot_longitude FLOAT","duration VARCHAR(50)", 
