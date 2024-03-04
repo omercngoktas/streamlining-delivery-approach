@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/project_file/RouteOptimize/src",
-      "program": "/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/project_file/RouteOptimize/src/build/Debug/outDebug"
+      "cwd": "/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/project_file/AntColonyOptimization/include",
+      "program": "/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/project_file/AntColonyOptimization/include/build/Debug/outDebug"
     }
   ]
 }

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from data.shipment_history.generate_shipment_history import generate_history_till_today
+from generate_shipment_history import generate_history_till_today
 
 class ShipmentManager:
     def __init__(self, shipment_history_path, output_path):
@@ -28,5 +28,5 @@ class ShipmentManager:
         # self.output_stores_with_shipment(days_shipments)
         
     def insert_new_shipment_history(self):
-        new_shipment_history = pd.read_csv("./data/shipment_history/new_shipment_history.csv")
+        new_shipment_history = pd.read_csv("../data/shipment_history/new_shipment_history.csv")
         return new_shipment_history

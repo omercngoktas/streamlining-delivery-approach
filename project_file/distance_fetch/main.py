@@ -2,7 +2,7 @@ from GoogleMaps import GoogleMapsHandler
 from LocationManager import LocationManager
 from ShipmentManager import ShipmentManager
 from MultiprocessedFetcher import MultiprocessHandler
-from DatabaseManager import DBConnection
+from MySQL_Manager import MySQL_Manager
 import pandas as pd
 import time
 import datetime
@@ -18,6 +18,7 @@ def get_stores_with_shipments(stores, stores_with_shipment):
     
     return arranged_stores
 
+# return the missing results between the stores
 def find_missing_results(stores, results):
     missing_results = []
     for i in range(len(stores)):
@@ -28,21 +29,13 @@ def find_missing_results(stores, results):
         
     return missing_results
 
+# create the csv files
 def create_csv_files(output_path):
-    output_df = pd.DataFrame(columns=[
-                                'current_id',
-                                'current_latitude',
-                                'current_longitude',
-                                'duration',
-                                'distance',
-                                'next_id',
-                                'next_latitude',
-                                'next_longitude'
-                            ])
-    
+    output_df = pd.DataFrame(columns=['current_id','current_latitude','current_longitude','duration','distance','next_id','next_latitude','next_longitude'])
     output_df.to_csv(f"{output_path}/stores_output.csv", index=False)
     output_df.to_csv(f"{output_path}/depot_output.csv", index=False)
 
+# generate the id for the distance and duration
 def distance_duration_id_generator(year, month, day):
     generated_uuid = uuid.uuid4()
     # Convert UUID to hexadecimal string
@@ -51,15 +44,22 @@ def distance_duration_id_generator(year, month, day):
     truncated_uuid = hex_uuid[:20]
     return f"DD-{truncated_uuid.upper()}-{year}-{month}-{day}"
 
+# inserting new shipment histories to the database
 def insert_new_shipment_history_to_database(db):
     # try to insert the shipment history to the database
     try: 
         # save the recently created shipment history to the database
-        new_shipment_history = pd.read_csv("./data/shipment_history/new_shipment_history.csv")
-        for index, row in new_shipment_history.iterrows():
-            db.insert("shipment_history", ["shipment_id", "store_id", "date", "shipments"], [str(row[0]), str(row[1]), row[2], int(row[3])])
+        new_shipment_history = pd.read_csv("../data/shipment_history/new_shipment_history.csv")
+        for i in range(len(new_shipment_history)):
+            shipment_id = new_shipment_history.loc[i, "shipment_id"]
+            store_id = new_shipment_history.loc[i, "store_id"]
+            date = new_shipment_history.loc[i, "date"]
+            shipments = new_shipment_history.loc[i, "shipments"]
+            db.insert("shipment_history", "shipment_id, store_id, date, shipments", "'{}', '{}', '{}', {}".format(shipment_id, store_id, date, shipments))
+            print("New shipment history inserted to the database: ", shipment_id, store_id, date, shipments)
+            
         # delete the contents of the new_shipment_history.csv
-        open("./data/shipment_history/new_shipment_history.csv", "w").close()
+        open("../data/shipment_history/new_shipment_history.csv", "w").close()
     except Exception as e:
         print(e)
         
@@ -70,22 +70,40 @@ def generate_id_for_distance_duration(db, year, month, day, output_path):
         depot_output = pd.read_csv(f"{output_path}/depot_output.csv")
         depot_output.insert(0, 'id', [distance_duration_id_generator(year, month, day) for _ in range(len(depot_output))])
         depot_output.insert(1, 'date', [f"{year}-{month}-{day}" for _ in range(len(depot_output))])
-        depot_output.to_csv(f"{output_path}/depot_output.csv", index=False)
         stores_output = pd.read_csv(f"{output_path}/stores_output.csv")
         stores_output.insert(0, 'id', [distance_duration_id_generator(year, month, day) for _ in range(len(stores_output))])
         stores_output.insert(1, 'date', [f"{year}-{month}-{day}" for _ in range(len(stores_output))])
+        
+        depot_output.to_csv(f"{output_path}/depot_output.csv", index=False)
         stores_output.to_csv(f"{output_path}/stores_output.csv", index=False)
+        
+        try: 
+            depot_distance_duration = pd.read_csv(f"../data/distance_duration/depot_distance_duration.csv")
+            stores_distance_duration = pd.read_csv(f"../data/distance_duration/stores_distance_duration.csv")
+        except:
+            # create the csv files
+            depot_distance_duration = pd.DataFrame(columns=['id','date','current_id','current_latitude','current_longitude','duration','distance','next_id','next_latitude','next_longitude'])
+            stores_distance_duration = pd.DataFrame(columns=['id','date','current_id','current_latitude','current_longitude','duration','distance','next_id','next_latitude','next_longitude'])
+            
+        # insert depot_output frame to depot_distance_duration frame
+        depot_distance_duration = pd.concat([depot_distance_duration, depot_output], axis=0)
+        depot_distance_duration.to_csv(f"../data/distance_duration/depot_distance_duration.csv", index=False)
+        
+        # insert stores_output frame to stores_distance_duration frame
+        stores_distance_duration = pd.concat([stores_distance_duration, stores_output], axis=0)
+        stores_distance_duration.to_csv(f"../data/distance_duration/stores_distance_duration.csv", index=False)
+        
     except Exception as e:
         print(e)
         
     # insert the results of the depot which are duration and distance between the depot and the stores
     for index, row in depot_output.iterrows():
-        db.n("depots_distances_durations", ["dp_dist_dura_id", "date", "depot_id", "depot_latitude", "depot_longitude", "duration", "distance", "next_id", "next_latitude", "next_longitude"], [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]])
+        db.insert("depots_distances_durations", "dp_dist_dura_id, date, depot_id, depot_latitude, depot_longitude, duration, distance, next_id, next_latitude, next_longitude", "'{}', '{}', '{}', {}, {}, '{}', '{}', '{}', {}, {}".format(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]))
         print(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
         
     # insert the results of the stores which are duration and distance between the stores
     for index, row in stores_output.iterrows():
-        db.insert("stores_distances_durations", ["st_dist_dura_id", "date", "current_id", "current_latitude", "current_longitude", "duration", "distance", "next_id", "next_latitude", "next_longitude"], [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]])
+        db.insert("stores_distances_durations", "st_dist_dura_id, date, current_id, current_latitude, current_longitude, duration, distance, next_id, next_latitude, next_longitude", "'{}', '{}', '{}', {}, {}, '{}', '{}', '{}', {}, {}".format(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]))
         print(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
         
 def stores_missing_result_to_file(output_path, stores_to_visit):
@@ -115,7 +133,7 @@ def multiprocess_handler(cpu_count, stores, depot_df, stores_with_shipment):
 
 def main():
     # Database connection
-    db = DBConnection("postgres", "9113", "localhost", "5432", "gratis")
+    db = MySQL_Manager("localhost", "omercngoktas", "mwanamboka", "mydatabase")
     db.connect()
     
     # specifying the day to get the shipment, cpu_count, and output_path
@@ -125,23 +143,23 @@ def main():
     month = today.month
     year = today.year
     cpu_count = 12
-    output_path = "./data/output"
+    output_path = "../data/output"
     
     # create the csv files
     create_csv_files(output_path)
     
     # ShipmentManager automatically generates the shipment history till today
-    shipment_manager = ShipmentManager("./data/shipment_history/shipment_history.csv", f"{output_path}/stores_with_shipment.csv")   
+    shipment_manager = ShipmentManager("../data/shipment_history/shipment_history.csv", f"{output_path}/stores_with_shipment.csv")   
     # LocationManager is used to get the depot and the stores
-    location_manager = LocationManager("./data/store/stores.csv", "./data/depot/depots.csv")
+    location_manager = LocationManager("../data/store/stores.csv", "../data/depot/depots.csv")
     
     # try to insert the shipment history to the database
     insert_new_shipment_history_to_database(db)
+    print("Recently created shipment history inserted to the database.")
     
     # given the day, month, and year, get the shipment at the given date to file
     shipment_manager.given_days_shipment_to_file(day, month, year)
-    
-    print("Shipment history inserted to the database")
+    print("Shipment at the given date saved to file.")
     
     # get the depot and the stores
     depot_df = location_manager.get_depot() # get the depot
@@ -153,8 +171,6 @@ def main():
     # get the stores with shipment
     stores_shipments_with_details = get_stores_with_shipments(stores, stores_with_shipment) # get the stores with shipment
     stores_to_visit = pd.DataFrame(stores_shipments_with_details, columns=["store_id", "latitude", "longitude"]) # create a dataframe of the stores with shipment
-    
-    
     
     
     # THIS IS FETCHING THE DISTANCE AND DURATION BETWEEN THE DEPOT AND THE STORES
@@ -171,11 +187,8 @@ def main():
     generate_id_for_distance_duration(db, year, month, day, output_path)
     
     # # delete the content of depot and stores outputs
-    # open(f"{output_path}/depot_output.csv", "w").close()
-    # open(f"{output_path}/stores_output.csv", "w").close()
-    
-    # close the database connection
-    db.close()   
+    open(f"{output_path}/depot_output.csv", "w").close()
+    open(f"{output_path}/stores_output.csv", "w").close()
     
     # print the time taken to complete the processes
     print('All processes completed in ', time.time() - start_time, ' seconds')

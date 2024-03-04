@@ -24,7 +24,7 @@ class MultiprocessHandler:
                 return
 
             print("Output: ", output_df.values.tolist())
-            output_df.to_csv("./data/output/stores_output.csv", mode="a", index=False, header=not os.path.exists("./data/output/stores_output.csv"))
+            output_df.to_csv("../data/output/stores_output.csv", mode="a", index=False, header=not os.path.exists("../data/output/stores_output.csv"))
             print("Wrote to file")
         finally:
             # Release file lock after writing to the file
@@ -45,7 +45,7 @@ class MultiprocessHandler:
                 return
 
             print("Output: ", output_df.values.tolist())
-            output_df.to_csv("./data/output/depot_output.csv", mode="a", index=False, header=not os.path.exists("./data/output/depot_output.csv"))
+            output_df.to_csv("../data/output/depot_output.csv", mode="a", index=False, header=not os.path.exists("../data/output/depot_output.csv"))
             print("Wrote to file")
         finally:
             # Release file lock after writing to the file
