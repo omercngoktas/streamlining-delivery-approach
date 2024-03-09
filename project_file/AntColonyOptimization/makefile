@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++14 -Wall -Wextra
+CFLAGS = -std=c++20 -Wall -Wextra
 # Include directory for MySQL headers
 INCLUDES = -I/opt/homebrew/include
 # Library directory for MySQL and additional libraries

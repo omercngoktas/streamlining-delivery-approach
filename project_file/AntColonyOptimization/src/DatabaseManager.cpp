@@ -134,3 +134,97 @@ void MySQLConnector::fetchVehicles(VehicleManager& vehicleManager) {
     
     mysql_free_result(result);
 }
+
+// implement fetchStoresDistancesDurations method, but be careful with the date format
+void MySQLConnector::fetchStoresDistancesDurations(DistanceDurationManager& distanceDurationManager, int year, int month, int day) {
+    char sql[200];
+    sprintf(sql, "SELECT * FROM stores_distances_durations WHERE date = '%d-%d-%d'", year, month, day);
+    if (mysql_query(conn, sql)) {
+        std::cerr << "Query failed: " << mysql_error(conn) << std::endl;
+        return;
+    }
+    
+    MYSQL_RES *result = mysql_store_result(conn);
+    if (result == NULL) {
+        std::cerr << "Failed to retrieve query results: " << mysql_error(conn) << std::endl;
+        return;
+    }
+    
+    MYSQL_ROW row;
+    unsigned int num_fields = mysql_num_fields(result);
+    while ((row = mysql_fetch_row(result))) {
+        string st_dist_dura_id = row[0];
+        string date = row[1];
+        string current_id = row[2];
+        double current_latitude = atof(row[3]);
+        double current_longitude = atof(row[4]);
+        string duration = row[5];
+        string distance = row[6];
+        string next_id = row[7];
+        double next_latitude = atof(row[8]);
+        double next_longitude = atof(row[9]);
+        distanceDurationManager.addStoresDistancesDurations(st_dist_dura_id, date, current_id, current_latitude, current_longitude, duration, distance, next_id, next_latitude, next_longitude);
+    }
+    
+    mysql_free_result(result);
+}
+
+void MySQLConnector::fetchDepotDistancesDurations(DistanceDurationManager& distanceDurationManager, int year, int month, int day) {
+    char sql[200];
+    sprintf(sql, "SELECT * FROM depots_distances_durations WHERE date = '%d-%d-%d'", year, month, day);
+    if (mysql_query(conn, sql)) {
+        std::cerr << "Query failed: " << mysql_error(conn) << std::endl;
+        return;
+    }
+    
+    MYSQL_RES *result = mysql_store_result(conn);
+    if (result == NULL) {
+        std::cerr << "Failed to retrieve query results: " << mysql_error(conn) << std::endl;
+        return;
+    }
+    
+    MYSQL_ROW row;
+    unsigned int num_fields = mysql_num_fields(result);
+    while ((row = mysql_fetch_row(result))) {
+        string dp_dist_dura_id = row[0];
+        string date = row[1];
+        string current_id = row[2];
+        double current_latitude = atof(row[3]);
+        double current_longitude = atof(row[4]);
+        string duration = row[5];
+        string distance = row[6];
+        string next_id = row[7];
+        double next_latitude = atof(row[8]);
+        double next_longitude = atof(row[9]);
+        distanceDurationManager.addDepotsDistancesDurations(dp_dist_dura_id, date, current_id, current_latitude, current_longitude, duration, distance, next_id, next_latitude, next_longitude);
+    }
+    
+    mysql_free_result(result);
+}
+
+void MySQLConnector::fetchShipments(ShipmentManager& shipmentManager, int year, int month, int day) {
+    char sql[200];
+    sprintf(sql, "SELECT * FROM shipment_history WHERE date = '%d-%d-%d'", year, month, day);
+    if (mysql_query(conn, sql)) {
+        std::cerr << "Query failed: " << mysql_error(conn) << std::endl;
+        return;
+    }
+    
+    MYSQL_RES *result = mysql_store_result(conn);
+    if (result == NULL) {
+        std::cerr << "Failed to retrieve query results: " << mysql_error(conn) << std::endl;
+        return;
+    }
+    
+    MYSQL_ROW row;
+    unsigned int num_fields = mysql_num_fields(result);
+    while ((row = mysql_fetch_row(result))) {
+        string shipment_id = row[0];
+        string store_id = row[1];
+        string date = row[2];
+        int no_of_shipments = atoi(row[3]);
+        shipmentManager.addShipment(shipment_id, store_id, date, no_of_shipments);
+    }
+    
+    mysql_free_result(result);
+}

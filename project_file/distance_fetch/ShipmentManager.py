@@ -25,7 +25,7 @@ class ShipmentManager:
     
     def given_days_shipment_to_file(self, day, month, year):
         days_shipments = self.get_shipment_at_date(day, month, year)
-        # self.output_stores_with_shipment(days_shipments)
+        self.output_stores_with_shipment(days_shipments)
         
     def insert_new_shipment_history(self):
         new_shipment_history = pd.read_csv("../data/shipment_history/new_shipment_history.csv")

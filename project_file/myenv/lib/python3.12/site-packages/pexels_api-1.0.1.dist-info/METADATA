@@ -1,0 +1,56 @@
+Metadata-Version: 2.1
+Name: pexels-api
+Version: 1.0.1
+Summary: Use Pexels API v1 with Python
+Home-page: https://github.com/AguilarLagunasArturo/pexels-api
+Author: Arturo Aguilar Lagunas
+Author-email: aguilar.lagunas.arturo@gmail.com
+License: UNKNOWN
+Keywords: pexels api images photos
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+Requires-Dist: requests
+
+# Using Pexels API v1 with Python
+Use *[pexels_api][2]* to search photos from [Pexels][0].
+## Dependencies:
+- [requests][1]
+
+## Installation:
+`pip install pexels-api`
+
+## Usage:
+The following code shows you how to import the package and make a simple query to Pexels API v1. See more [examples][4] or the [documentation][3].
+```python
+# Import API class from pexels_api package
+from pexels_api import API
+# Type your Pexels API
+PEXELS_API_KEY = 'YOUR-PEXELS-API-KEY'
+# Create API object
+api = API(PEXELS_API_KEY)
+# Search five 'kitten' photos
+api.search('kitten', page=1, results_per_page=5)
+# Get photo entries
+photos = api.get_entries()
+# Loop the five photos
+for photo in photos:
+  # Print photographer
+  print('Photographer: ', photo.photographer)
+  # Print url
+  print('Photo url: ', photo.url)
+  # Print original size url
+  print('Photo original size: ', photo.original)
+```
+
+<!-- References -->
+[0]: https://pexels.com                        "Pexels website"
+[1]: https://2.python-requests.org/en/master/  "Documentation: requests"
+<!-- Documentation -->
+[2]: https://github.com/AguilarLagunasArturo/pexels-api               "Source code on Github"
+[3]: https://github.com/AguilarLagunasArturo/pexels-api#documentation "Documentation: pexels_api"
+[4]: https://github.com/AguilarLagunasArturo/pexels-api#examples      "Examples"
+
+

@@ -11,18 +11,19 @@ class Depot {
     public:
         Depot(string depot_id, string depot_location, string depot_address, double latitude, double longitude);
         ~Depot() = default;
-        // Setters
-        void setDepotId(const string& depot_id);
-        void setDepotLocation(const string& depot_location);
-        void setDepotAddress(const string& depot_address);
-        void setLatitude(const double& latitude);
-        void setLongitude(const double& longitude);
+        
         // Getters
-        string getDepotId() const;
-        string getDepotLocation() const;
-        string getDepotAddress() const;
-        double getLatitude() const;
-        double getLongitude() const;
+        string getDepotId() const { return this->depot_id; }
+        string getDepotLocation() const { return this->depot_location; }
+        string getDepotAddress() const { return this->depot_address; }
+        double getLatitude() const { return this->latitude; }
+        double getLongitude() const { return this->longitude; }
+        // Setters
+        void setDepotId(string depot_id) { this->depot_id = depot_id; }
+        void setDepotLocation(string depot_location) { this->depot_location = depot_location; }
+        void setDepotAddress(string depot_address) { this->depot_address = depot_address; }
+        void setLatitude(double latitude) { this->latitude = latitude; }
+        void setLongitude(double longitude) { this->longitude = longitude; }
     
     private:
         string depot_id;
