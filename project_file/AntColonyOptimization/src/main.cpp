@@ -26,21 +26,23 @@ int main() {
     ShipmentManager shipmentManager;
     VehicleManager vehicleManager;
     DistanceDurationManager distanceDurationManager;
-    AntColony antColony = AntColony(2, 18);
-
+    AntColony antColony = AntColony(15, 18);
 
     dbConnector.fetchStores(storesManager); // Fetch stores from the database and store them in storesManager vector
     dbConnector.fetchDepot(depotManager); // Fetch depot from the database and store them in depotManager vector
     dbConnector.fetchVehicles(vehicleManager); // Fetch vehicles from the database and store them in vehicleManager vector
-    
     dbConnector.fetchStoresDistancesDurations(distanceDurationManager, 2024, 3, 4);
     dbConnector.fetchDepotDistancesDurations(distanceDurationManager, 2024, 3, 4);
-
-    
-
     dbConnector.fetchShipments(shipmentManager, 2024, 3, 4); // Fetch shipments from the database and store them in shipmentManager vector
 
     antColony.generateRoutes(storesManager, shipmentManager, vehicleManager, distanceDurationManager);
+    
+    antColony.displayRoutes();
+
+    antColony.displayAnts();
+
+
+    
     
     
     

@@ -63,7 +63,7 @@ Shipment ShipmentManager::getRandShipment(vector<Shipment>& currentShipments) co
 void ShipmentManager::removeShipment(vector<Shipment>& shipments, string shipment_id) const {
     for (auto it = shipments.begin(); it != shipments.end(); it++) {
         if (it->getShipmentId() == shipment_id) {
-            cout << "Shipment with ID " << shipment_id << " removed" << endl;
+            // cout << "Shipment with ID " << shipment_id << " removed" << endl;
             shipments.erase(it);
             return;
         }
@@ -83,7 +83,7 @@ Shipment ShipmentManager::getBestShipment(vector<Shipment>& currentShipments, in
     }
     // If there is no suitable shipment, return null
     if (bestSuitableShipmentPaletteCount == 0) {
-        cout << "No suitable shipment found" << endl;
+        // cout << "No suitable shipment found" << endl;
         return Shipment("", "", "", 0);
     }
     return currentShipments[bestSuitableShipmentIndex];

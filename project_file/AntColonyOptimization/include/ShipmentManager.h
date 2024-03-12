@@ -44,6 +44,7 @@ class ShipmentManager {
         Shipment getRandShipment(vector<Shipment>& currentShipments) const ;
         void removeShipment(vector<Shipment>& shipments, string shipment_id) const;
         Shipment getBestShipment(vector<Shipment>& currentShipments, int vehicleCapacity) const;
+        
 
     private:
         vector<unique_ptr<Shipment>> shipments;

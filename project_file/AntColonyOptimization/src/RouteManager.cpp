@@ -1,22 +1,81 @@
 #include "../include/RouteManager.h"
 
 // Adding a visit point to the route
-void Route::addVisitPoint(const Store& store, const Shipment& shipment) {
-    this->stores.push_back(make_unique<Store>(store));
-    this->shipments.push_back(make_unique<Shipment>(shipment));
+void Route::addVisitPoint(shared_ptr<Store> store, shared_ptr<Shipment> shipment) {
+    this->stores.push_back(store);
+    this->shipments.push_back(shipment);
 }
 
-// Display the route
 void Route::displayRoute() {
-    cout << "Route: ";
+    using std::cout;
+    using std::endl;
+    using std::left;
+    using std::setw;
+
+    // Calculate the total width based on the widths used in setw plus separators
+    int totalWidth = 25 + 15 + 16 + 38 + 15 + 22 + 12 + 1; // Sum of all setw widths + separators('|' and spaces)
+    
+    // Function to print dashes
+    auto printLine = [&]() {
+        cout << "+"; // Start border
+        for (int i = 1; i < totalWidth; i++) { // One less than totalWidth to account for starting '+'
+            cout << "-";
+        }
+        cout << "+" << endl; // End border
+    };
+
+    printLine();
+    cout << "| " << setw(25) << left << "Store ID"
+         << "| " << setw(15) << "Store Latitude"
+         << "| " << setw(16) << "Store Longitude"
+         << "| " << setw(38) << "Shipment ID"
+         << "| " << setw(15) << "Shipment Date"
+         << "| " << setw(22) << "Shipment Palette Count |" << endl;
+    printLine();
     for (int i = 0; i < this->stores.size(); i++) {
-        cout << this->stores[i]->getStoreId() << " -> ";
+        cout << "| " << setw(25) << left << this->stores[i]->getStoreId()
+             << "| " << setw(15) << this->stores[i]->getLatitude()
+             << "| " << setw(16) << this->stores[i]->getLongitude()
+             << "| " << setw(38) << this->shipments[i]->getShipmentId()
+             << "| " << setw(15) << this->shipments[i]->getDate()
+             << "| " << setw(22) << this->shipments[i]->getNoOfShipments() << " |" << endl;
     }
-    cout << "End" << endl;
+    cout << "| Total Distance: " << setw(10) << left << this->getTotalDistance() 
+         << "Total Duration: " << setw(11) << this->getTotalDuration() 
+         << "Total Palette Count: " << setw(5) << this->getTotalPaletteCount() << " |" << endl;
+    printLine();
 }
 
 
-bool Route::isRouteCompleted() const {
-    return this->shipments.empty();
+// calculate totalPaletteCount
+void Route::calculateTotalPaletteCount() {
+    int totalPaletteCount = 0;
+    for (const auto& shipment : this->shipments) {
+        totalPaletteCount += shipment->getNoOfShipments();
+    }
+    this->setTotalPaletteCount(totalPaletteCount);
 }
 
+// calculate totalDistance
+void Route::calculateTotalDistance(const DistanceDurationManager& distanceDurationManager) {
+    double totalDistance = 0;
+    for (int i = 0; i < this->stores.size() - 1; i++) {
+        string currentId = this->stores[i]->getStoreId();
+        string nextId = this->stores[i + 1]->getStoreId();
+        StoresDistancesDurations sdd = distanceDurationManager.getStoreDistDuraById(currentId, nextId);
+        totalDistance += stod(sdd.getDistance());
+    }
+    this->setTotalDistance(totalDistance);
+}
+
+// calculate totalDuration
+void Route::calculateTotalDuration(const DistanceDurationManager& distanceDurationManager) {
+    double totalDuration = 0;
+    for (int i = 0; i < this->stores.size() - 1; i++) {
+        string currentId = this->stores[i]->getStoreId();
+        string nextId = this->stores[i + 1]->getStoreId();
+        StoresDistancesDurations sdd = distanceDurationManager.getStoreDistDuraById(currentId, nextId);
+        totalDuration += stod(sdd.getDuration());
+    }
+    this->setTotalDuration(totalDuration);
+}

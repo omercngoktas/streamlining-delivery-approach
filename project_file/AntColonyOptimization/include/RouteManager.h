@@ -3,6 +3,8 @@
 
 #include "StoreManager.h"
 #include "ShipmentManager.h"
+#include "DistanceDurationManager.h"
+#include <iomanip> // Include for std::setw and std::left
 
 using namespace std;
 
@@ -14,24 +16,27 @@ class Route {
     public:
         Route() = default;
         ~Route() = default;
-        void addVisitPoint(const Store& store, const Shipment& shipment);
+        void addVisitPoint(shared_ptr<Store> store, shared_ptr<Shipment> shipment);
         void displayRoute();
         // Getters
         int getTotalDistance() const { return this->totalDistance; }
         int getTotalDuration() const { return this->totalDuration; }
         int getTotalPaletteCount() const { return this->totalPaletteCount; }
-        vector<unique_ptr<Store>>& getStores() { return this->stores; }
-        vector<unique_ptr<Shipment>>& getShipments() { return this->shipments; }
+        const vector<shared_ptr<Store>>& getStores() const { return this->stores; }
+        const vector<shared_ptr<Shipment>>& getShipments() const { return this->shipments; }
         // Setters
         void setTotalDistance(int totalDistance) { this->totalDistance = totalDistance; }
         void setTotalDuration(int totalDuration) { this->totalDuration = totalDuration; }
         void setTotalPaletteCount(int totalPaletteCount) { this->totalPaletteCount = totalPaletteCount; }
-        bool isRouteCompleted() const;
+        void calculateTotalDistance(const DistanceDurationManager& distanceDurationManager);
+        void calculateTotalDuration(const DistanceDurationManager& distanceDurationManager);
+        void calculateTotalPaletteCount();
+
     private:
-        vector<unique_ptr<Store>> stores;
-        vector<unique_ptr<Shipment>> shipments;
-        int totalDistance;
-        int totalDuration;
+        vector<shared_ptr<Store>> stores;
+        vector<shared_ptr<Shipment>> shipments;
+        double totalDistance;
+        double totalDuration;
         int totalPaletteCount;
 };
 
