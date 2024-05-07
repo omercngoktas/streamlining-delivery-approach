@@ -24,6 +24,7 @@ class Route {
         int getTotalPaletteCount() const { return this->totalPaletteCount; }
         const vector<shared_ptr<Store>>& getStores() const { return this->stores; }
         const vector<shared_ptr<Shipment>>& getShipments() const { return this->shipments; }
+        double getPheromone() const { return this->pheromone; }
         // Setters
         void setTotalDistance(int totalDistance) { this->totalDistance = totalDistance; }
         void setTotalDuration(int totalDuration) { this->totalDuration = totalDuration; }
@@ -31,6 +32,8 @@ class Route {
         void calculateTotalDistance(const DistanceDurationManager& distanceDurationManager);
         void calculateTotalDuration(const DistanceDurationManager& distanceDurationManager);
         void calculateTotalPaletteCount();
+        void setPheromone(double pheromone) { this->pheromone = pheromone; }
+        int getDistanceBetweenStores(const Store& store1, const Store& store2, const DistanceDurationManager& distanceDurationManager);
 
     private:
         vector<shared_ptr<Store>> stores;
@@ -38,6 +41,7 @@ class Route {
         double totalDistance;
         double totalDuration;
         int totalPaletteCount;
+        double pheromone;
 };
 
 #endif

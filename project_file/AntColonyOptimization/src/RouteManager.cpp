@@ -79,3 +79,11 @@ void Route::calculateTotalDuration(const DistanceDurationManager& distanceDurati
     }
     this->setTotalDuration(totalDuration);
 }
+
+// Get the distance between two stores
+int Route::getDistanceBetweenStores(const Store& store1, const Store& store2, const DistanceDurationManager& distanceDurationManager) {
+    string store1Id = store1.getStoreId();
+    string store2Id = store2.getStoreId();
+    StoresDistancesDurations sdd = distanceDurationManager.getStoreDistDuraById(store1Id, store2Id);
+    return stoi(sdd.getDistance());
+}

@@ -20,7 +20,13 @@ void AntColony::generateRoutes(const StoreManager& storeManager, const ShipmentM
             route->calculateTotalDistance(distanceDurationManager);
             route->calculateTotalDuration(distanceDurationManager);
             route->calculateTotalPaletteCount();
-            
+
+            // Assigning the pheromone value to the route
+            int totalDistance = route->getTotalDistance();
+            int totalStoresCount = route->getStores().size();
+            // Convert one of the variables to double for floating-point division
+            double pheromone = static_cast<double>(totalStoresCount) / totalDistance;
+            route->setPheromone(pheromone);
         }
     }
 
@@ -30,9 +36,12 @@ void AntColony::generateRoutes(const StoreManager& storeManager, const ShipmentM
             ant->setTotalDistance(ant->getTotalDistance() + route->getTotalDistance());
             ant->setTotalDuration(ant->getTotalDuration() + route->getTotalDuration());
             ant->setTotalPaletteCount(ant->getTotalPaletteCount() + route->getTotalPaletteCount());
+            ant->calculateFitnessValue();
         }
     }
-
+    // sort the ants by fitness value
+    sortAntsByFitnessValue();
+    
 }
 
 // Generate a route for the ant
@@ -46,8 +55,8 @@ void Ant::generateRoute(const StoreManager& storeManager, const ShipmentManager&
 
     while(!remainedShipments.empty()) {
         Shipment shipmentToBeAdded;
-        Route route;
         currentCapacity = 0;
+        Route route;
         // cout << "--------------------------------------------------------" << endl;
         while(currentCapacity < this->vehicleCapacity && !remainedShipments.empty()) {
             // cout << "Current vehicle capacity: " << currentCapacity << endl;
@@ -112,7 +121,7 @@ void AntColony::displayAnts() const {
     using std::setw;
 
     // Calculate the total width based on the widths used in setw plus separators
-    int totalWidth = 10 + 16 + 16 + 16 + 19 + 11; // Sum of all setw widths + separators('|' and spaces)
+    int totalWidth = 10 + 16 + 16 + 16 + 19 + 17 + 9; // Sum of all setw widths + separators('|' and spaces)
     
     // Function to print dashes
     auto printLine = [&]() {
@@ -128,14 +137,72 @@ void AntColony::displayAnts() const {
          << "| " << setw(16) << "Vehicle Used"
          << "| " << setw(16) << "Total Distance"
          << "| " << setw(16) << "Total Duration"
-         << "| " << setw(19) << "Total Palette Count |" << endl;
+         << "| " << setw(19) << "Total Palette Count"
+         << "| " << setw(17) << "Fitness Value |" << endl;
     printLine();
     for (int i = 0; i < this->ants.size(); i++) {
         cout << "| " << setw(10) << left << i
              << "| " << setw(16) << this->ants[i]->getNumberOfVehicleUsed()
              << "| " << setw(16) << this->ants[i]->getTotalDistance()
              << "| " << setw(16) << this->ants[i]->getTotalDuration()
-             << "| " << setw(19) << this->ants[i]->getTotalPaletteCount() << " |" << endl;
+             << "| " << setw(19) << this->ants[i]->getTotalPaletteCount()
+             << "| " << setw(14) << this->ants[i]->getFitnessValue() << "|" << endl;
     }
     printLine();
 }
+
+// Calculate the fitness value of the ant
+void Ant::calculateFitnessValue() {
+    int numberOfVehicleUsed = this->getNumberOfVehicleUsed();
+    double totalDistance = this->getTotalDistance();
+    int fitness = (numberOfVehicleUsed * 500) + (totalDistance * 5);
+    this->setFitnessValue(fitness);
+}
+
+// Sort the ants by fitness value
+void AntColony::sortAntsByFitnessValue() {
+    std::sort(ants.begin(), ants.end(), [](const unique_ptr<Ant>& a, const unique_ptr<Ant>& b) {
+        return a->getFitnessValue() < b->getFitnessValue();
+    });
+}
+
+
+
+PheromoneMatrix::PheromoneMatrix(const vector<unique_ptr<Shipment>>& shipments, const vector<unique_ptr<Store>>& stores) {
+    // assign shipments and stores
+    for(const auto& shipment : shipments) {
+        this->shipments.push_back(*shipment);
+    }
+    for(const auto& store : stores) {
+        this->stores.push_back(*store);
+    }
+
+    for(int i = 0; i < shipments.size(); i++) {
+        vector<double> row;
+        for(int j = 0; j < shipments.size(); j++) {
+            row.push_back(0.2);
+        }
+        pheromoneMatrix.push_back(row);
+    }
+}
+
+// Show the pheromone matrix
+void PheromoneMatrix::showPheromoneMatrix() const {
+    for(const auto& shipment : shipments) {
+        // print characters between index 3-6
+        cout << shipment.getStoreId().substr(3, 6) << " ";
+    }
+    cout << endl;
+
+    int i = 0;
+    for(const auto& row : pheromoneMatrix) {
+        for(const auto& element : row) {
+            // print decimal point with 3 precision and use setw
+            cout << fixed << setprecision(3) << setw(6) << element << " ";
+        }
+        cout << shipments[i++].getStoreId().substr(3, 6) << endl;
+    }
+
+    
+}
+
