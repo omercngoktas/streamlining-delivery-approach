@@ -26,7 +26,7 @@ int main() {
     ShipmentManager shipmentManager;
     VehicleManager vehicleManager;
     DistanceDurationManager distanceDurationManager;
-    AntColony antColony = AntColony(20, 18);
+    AntColony antColony = AntColony(50, 18);
 
     dbConnector.fetchStores(storesManager); // Fetch stores from the database and store them in storesManager vector
     dbConnector.fetchDepot(depotManager); // Fetch depot from the database and store them in depotManager vector
@@ -48,8 +48,14 @@ int main() {
     PheromoneMatrix pheromoneMatrix(shipmentManager.getShipments(), storesManager.getStores());
     pheromoneMatrix.showPheromoneMatrix();
 
-    antColony.getAnt(0).getRoutes()[0]->displayRoute();
+    for(const auto& ant : antColony.getAnts()) {
+        // convert auto to Ant
+        pheromoneMatrix.updatePheromoneMatrix(*ant);
+    }
     
+    cout << "-------------------------------\n";
+
+    pheromoneMatrix.showPheromoneMatrix();
 
     return 0;
 }

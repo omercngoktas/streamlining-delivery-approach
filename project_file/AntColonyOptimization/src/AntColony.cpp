@@ -37,6 +37,8 @@ void AntColony::generateRoutes(const StoreManager& storeManager, const ShipmentM
             ant->setTotalDuration(ant->getTotalDuration() + route->getTotalDuration());
             ant->setTotalPaletteCount(ant->getTotalPaletteCount() + route->getTotalPaletteCount());
             ant->calculateFitnessValue();
+            ant->setPheromone(static_cast<double>(shipmentManager.getShipments().size()) / ant.get()->getTotalDistance());
+            
         }
     }
     // sort the ants by fitness value
@@ -202,7 +204,62 @@ void PheromoneMatrix::showPheromoneMatrix() const {
         }
         cout << shipments[i++].getStoreId().substr(3, 6) << endl;
     }
-
-    
 }
 
+// display routes for ant
+void Ant::displayRoutes() const {
+    for(const auto& route : routes) {
+        route->displayRoute();
+    }
+}
+
+// update pheromone matrix
+void PheromoneMatrix::updatePheromoneMatrix(Ant& ant) {
+    double pheromone = ant.getPheromone();
+    
+    for(const auto& route : ant.getRoutes()) {
+        for(int i = 0; i < route->getStores().size() - 1; i++) {
+            int store1Index = -1;
+            int store2Index = -1;
+            for(int j = 0; j < stores.size(); j++) {
+                if(stores[j].getStoreId() == route->getStores()[i]->getStoreId()) {
+                    store1Index = j;
+                }
+                if(stores[j].getStoreId() == route->getStores()[i + 1]->getStoreId()) {
+                    store2Index = j;
+                }
+            }
+            //find index for store1 and store2 in the pheromone matrix
+            for(int k = 0; k < shipments.size(); k++) {
+                if(shipments[k].getStoreId() == route->getStores()[i]->getStoreId()) {
+                    store1Index = k;
+                }
+                if(shipments[k].getStoreId() == route->getStores()[i + 1]->getStoreId()) {
+                    store2Index = k;
+                }
+            }
+
+            if(store1Index != -1 && store2Index != -1) {
+                pheromoneMatrix[store1Index][store2Index] += pheromone;
+                pheromoneMatrix[store2Index][store1Index] += pheromone;
+            }
+
+        }
+    }
+}
+
+void PheromoneMatrix::updatePheromoneMatrixForRoute(string storeId1, string storeId2, double pheromone) {
+    int store1Index = -1;
+    int store2Index = -1;
+    for(int i = 0; i < stores.size(); i++) {
+        if(stores[i].getStoreId() == storeId1) {
+            store1Index = i;
+        }
+        if(stores[i].getStoreId() == storeId2) {
+            store2Index = i;
+        }
+    }
+    if(store1Index != -1 && store2Index != -1) {
+        pheromoneMatrix[store1Index][store2Index] = pheromone;
+    }
+}

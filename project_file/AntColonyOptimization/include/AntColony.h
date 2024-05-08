@@ -16,6 +16,8 @@
 
 using namespace std;
 
+
+
 class Ant {
     public:
         Ant() = default;
@@ -38,6 +40,10 @@ class Ant {
         void setTotalPaletteCount(int totalPaletteCount) { this->totalPaletteCount = totalPaletteCount; }
         void setFitnessValue(int fitnessValue) { this->fitnessValue = fitnessValue; }
         void calculateFitnessValue();
+        // pheromone functions
+        double getPheromone() const { return pheromone; }
+        void setPheromone(double pheromone) { this->pheromone = pheromone; }
+        void displayRoutes() const;
 
     private:
         vector<unique_ptr<Route>> routes;
@@ -59,12 +65,14 @@ class AntColony {
         void displayRoutes() const;
         void displayAnts() const;
         void sortAntsByFitnessValue();
-        Ant& getAnt(int index) { return *ants[index]; }        
+        Ant& getAnt(int index) { return *ants[index]; }
+        // return ants
+        const vector<unique_ptr<Ant>>& getAnts() const { return ants; }
+        void showPheromoneForAnts() const;
     private:
         vector<unique_ptr<Ant>> ants;
         int numOfAnts;
         int vehicleCapacity;
-        
 };
 
 class PheromoneMatrix {
@@ -75,13 +83,14 @@ class PheromoneMatrix {
         // constructor with unique_ptr Store vector
         PheromoneMatrix(const vector<unique_ptr<Shipment>>& shipments, const vector<unique_ptr<Store>>& stores);
         void showPheromoneMatrix() const;
-        void updatePheromoneMatrix(ShipmentManager& shipmentManager);
+        void updatePheromoneMatrix(Ant& ant);
+        void updatePheromoneMatrixForRoute(string storeId1, string storeId2, double pheromone);
+
 
     private:
         vector<vector<double>> pheromoneMatrix;
         vector<Store> stores;
         vector<Shipment> shipments;
-
 };
 
 #endif
