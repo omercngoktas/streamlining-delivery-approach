@@ -248,6 +248,7 @@ void PheromoneMatrix::updatePheromoneMatrix(Ant& ant) {
     }
 }
 
+// update pheromone matrix for route
 void PheromoneMatrix::updatePheromoneMatrixForRoute(string storeId1, string storeId2, double pheromone) {
     int store1Index = -1;
     int store2Index = -1;
@@ -263,3 +264,140 @@ void PheromoneMatrix::updatePheromoneMatrixForRoute(string storeId1, string stor
         pheromoneMatrix[store1Index][store2Index] = pheromone;
     }
 }
+
+// with the given storeId, returns the next storeId with the highest pheromone
+string PheromoneMatrix::getNextStoreByPheromone(string storeId, vector<Shipment>& remainedShipments) {
+    int storeIndex = -1;
+    int highestPheromoneIndex = -1;
+    double highestPheromone = 0.0;
+    
+    for(int i = 0; i < shipments.size(); i++) {
+        if(shipments[i].getStoreId() == storeId) {
+            storeIndex = i;
+            break;
+        }
+    }
+
+    for(int j = 0; j < pheromoneMatrix[storeIndex].size(); j++) {
+        if(pheromoneMatrix[storeIndex][j] > highestPheromone) {
+            for(Shipment shipment : remainedShipments) {
+                if(shipment.getStoreId() == shipments[j].getStoreId()) {
+                    highestPheromone = pheromoneMatrix[storeIndex][j];
+                    highestPheromoneIndex = j;
+                }
+            }
+        }
+    }
+
+    return shipments[highestPheromoneIndex].getStoreId();
+}
+
+// generate routes based on pheromone matrix for ant colony
+void AntColony::generateRoutesBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix, const DistanceDurationManager& distanceDurationManager) {
+    for(int i = 0; i < numOfAnts; i++) {
+        auto ant = std::make_unique<Ant>(vehicleCapacity);
+        ant->generateRouteBasedOnPheromoneMatrix(storeManager, shipmentManager, pheromoneMatrix);
+        ants.push_back(move(ant));
+    }
+
+    // calculate the total distance of the routes and other things
+    for(const auto& ant : ants) {
+        for(const auto& route : ant->getRoutes()) {
+            route->calculateTotalDistance(distanceDurationManager);
+            route->calculateTotalDuration(distanceDurationManager);
+            route->calculateTotalPaletteCount();
+
+            // Assigning the pheromone value to the route
+            int totalDistance = route->getTotalDistance();
+            int totalStoresCount = route->getStores().size();
+            // Convert one of the variables to double for floating-point division
+            double pheromone = static_cast<double>(totalStoresCount) / totalDistance;
+            route->setPheromone(pheromone);
+        }
+    }
+
+    // calculate the total distance of the routes and other things for the ants
+    for(const auto& ant : ants) {
+        for(const auto& route : ant->getRoutes()) {
+            ant->setTotalDistance(ant->getTotalDistance() + route->getTotalDistance());
+            ant->setTotalDuration(ant->getTotalDuration() + route->getTotalDuration());
+            ant->setTotalPaletteCount(ant->getTotalPaletteCount() + route->getTotalPaletteCount());
+            ant->calculateFitnessValue();
+            ant->setPheromone(static_cast<double>(shipmentManager.getShipments().size()) / ant.get()->getTotalDistance());
+            
+        }
+    }
+    // sort the ants by fitness value
+    sortAntsByFitnessValue();
+}
+
+// generate route based on pheromone matrix for ant
+void Ant::generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix) {
+    vector<Shipment> remainedShipments;
+    for(const auto& shipment : shipmentManager.getShipments()) { if(shipment->getNoOfShipments() > 0) { remainedShipments.push_back(*shipment); } }
+    int currentCapacity;
+
+    // while there are still shipments to be delivered
+    while(!remainedShipments.empty()) {
+        Route route;
+        currentCapacity = 0;
+
+        Shipment currentShipment = shipmentManager.getRandShipment(remainedShipments);
+        string currentStoreId = currentShipment.getStoreId();
+        // cout << "-------------------------------------------" << endl;
+        // cout << "remainedShipments capacity: " << remainedShipments.size() << endl;
+        // cout << "-------------------------------------------" << endl;
+
+        // while the current capacity is less than the vehicle capacity and there are still shipments to be delivered
+        while(currentCapacity < this->vehicleCapacity && !remainedShipments.empty()) {
+            // capacity is exceeded when the current shipment is added
+            if(currentCapacity < this->vehicleCapacity && currentCapacity + currentShipment.getNoOfShipments() >= this->vehicleCapacity) {
+                currentCapacity += currentShipment.getNoOfShipments();
+                shared_ptr<Shipment> currentShipmentPtr = make_shared<Shipment>(currentShipment);
+                Store store = storeManager.getStoreById(currentShipment.getStoreId());
+                shared_ptr<Store> storePtr = make_shared<Store>(store);
+
+                route.addVisitPoint(storePtr, currentShipmentPtr);
+                if(remainedShipments.size() == 1) {
+                    this->addRoute(route);
+                    this->numberOfVehicleUsed++;
+                    return;
+                }
+                // remove the shipment from remainedShipments
+                shipmentManager.removeShipment(remainedShipments, currentShipment.getShipmentId());
+                
+                // currentStoreId = pheromoneMatrix.getNextStoreByPheromone(currentStoreId, remainedShipments);
+                // currentShipment = shipmentManager.getShipmentByStoreId(currentStoreId);
+                // cout << "****** In if statement" << endl;
+            } 
+            // capacity is not exceeded when the current shipment is added
+            else {
+                // cout << "Current capacity before addition: " << currentCapacity << endl;
+                currentCapacity += currentShipment.getNoOfShipments();
+                // cout << "Current capacity after addition: " << currentCapacity << endl;
+
+                shared_ptr<Shipment> currentShipmentPtr = make_shared<Shipment>(currentShipment);
+                Store store = storeManager.getStoreById(currentShipment.getStoreId());
+                shared_ptr<Store> storePtr = make_shared<Store>(store);
+                route.addVisitPoint(storePtr, currentShipmentPtr);
+
+                // remove the shipment from remainedShipments
+                // cout << "Number of shipments before removal: " << remainedShipments.size() << endl;
+                if(remainedShipments.size() == 1) {
+                    this->addRoute(route);
+                    this->numberOfVehicleUsed++;
+                    return;
+                }
+                shipmentManager.removeShipment(remainedShipments, currentShipment.getShipmentId());
+                // cout << "Number of shipments after removal: " << remainedShipments.size() << endl;
+                // get the next store based on the pheromone matrix
+                currentStoreId = pheromoneMatrix.getNextStoreByPheromone(currentStoreId, remainedShipments);
+                currentShipment = shipmentManager.getShipmentByStoreId(currentStoreId);
+            }
+            
+        }
+        this->addRoute(route);
+        this->numberOfVehicleUsed++;
+    }
+}
+

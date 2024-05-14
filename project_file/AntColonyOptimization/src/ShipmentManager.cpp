@@ -88,3 +88,23 @@ Shipment ShipmentManager::getBestShipment(vector<Shipment>& currentShipments, in
     }
     return currentShipments[bestSuitableShipmentIndex];
 }
+
+// Get the shipment by shipment_id
+Shipment ShipmentManager::getShipmentByShipmentId(string shipment_id) const {
+    for (const auto& shipment : shipments) {
+        if (shipment->getShipmentId() == shipment_id) {
+            return *shipment;
+        }
+    }
+    throw invalid_argument("Shipment ID not found");
+}
+
+// Get the shipment by shipment_id
+Shipment ShipmentManager::getShipmentByStoreId(string store_id) const {
+    for (const auto& shipment : shipments) {
+        if (shipment->getStoreId() == store_id) {
+            return *shipment;
+        }
+    }
+    throw invalid_argument("Store ID not found");
+}

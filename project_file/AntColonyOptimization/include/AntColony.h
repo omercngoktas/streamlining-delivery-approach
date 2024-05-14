@@ -16,7 +16,9 @@
 
 using namespace std;
 
-
+class PheromoneMatrix;
+class Ant;
+class AntColony;
 
 class Ant {
     public:
@@ -44,6 +46,8 @@ class Ant {
         double getPheromone() const { return pheromone; }
         void setPheromone(double pheromone) { this->pheromone = pheromone; }
         void displayRoutes() const;
+        // generate route based on pheromone matrix
+        void generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix);
 
     private:
         vector<unique_ptr<Route>> routes;
@@ -68,7 +72,11 @@ class AntColony {
         Ant& getAnt(int index) { return *ants[index]; }
         // return ants
         const vector<unique_ptr<Ant>>& getAnts() const { return ants; }
-        void showPheromoneForAnts() const;
+        // generating routes based on pheromone matrix
+        void generateRoutesBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix, const DistanceDurationManager& distanceDurationManager);
+        void insertAnt(Ant& ant);
+        Ant& getBestAnt() { return *ants[0]; }
+
     private:
         vector<unique_ptr<Ant>> ants;
         int numOfAnts;
@@ -85,6 +93,7 @@ class PheromoneMatrix {
         void showPheromoneMatrix() const;
         void updatePheromoneMatrix(Ant& ant);
         void updatePheromoneMatrixForRoute(string storeId1, string storeId2, double pheromone);
+        string getNextStoreByPheromone(string storeId, vector<Shipment>& remainedShipments);
 
 
     private:
