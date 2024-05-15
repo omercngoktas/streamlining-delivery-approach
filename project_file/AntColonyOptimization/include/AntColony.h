@@ -19,6 +19,7 @@ using namespace std;
 class PheromoneMatrix;
 class Ant;
 class AntColony;
+class HeuristicMatrix;
 
 class Ant {
     public:
@@ -95,11 +96,24 @@ class PheromoneMatrix {
         void updatePheromoneMatrixForRoute(string storeId1, string storeId2, double pheromone);
         string getNextStoreByPheromone(string storeId, vector<Shipment>& remainedShipments);
 
-
     private:
         vector<vector<double>> pheromoneMatrix;
         vector<Store> stores;
         vector<Shipment> shipments;
+};
+
+class HeuristicMatrix {
+    public:
+        HeuristicMatrix() = default;
+        ~HeuristicMatrix() = default;
+        HeuristicMatrix(const StoreManager& storeManager, DistanceDurationManager& distanceDurationManager, const ShipmentManager& shipmentManager);
+        void displayHeuristicMatrix() const;
+        double getHeuristicValue(string storeId1, string storeId2) const;
+        void displayStores() const;
+
+    private:
+        vector<vector<double>> heuristicMatrix;
+        vector<Store> stores;
 };
 
 #endif

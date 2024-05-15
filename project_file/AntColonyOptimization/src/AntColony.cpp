@@ -157,7 +157,9 @@ void AntColony::displayAnts() const {
 void Ant::calculateFitnessValue() {
     int numberOfVehicleUsed = this->getNumberOfVehicleUsed();
     double totalDistance = this->getTotalDistance();
-    int fitness = (numberOfVehicleUsed * 500) + (totalDistance * 5);
+    double totalDuration = this->getTotalDuration();
+
+    int fitness = (numberOfVehicleUsed * 500) + (totalDistance * 10) + (totalDuration * 3);
     this->setFitnessValue(fitness);
 }
 
@@ -168,8 +170,7 @@ void AntColony::sortAntsByFitnessValue() {
     });
 }
 
-
-
+// Pheromone matrix constructor
 PheromoneMatrix::PheromoneMatrix(const vector<unique_ptr<Shipment>>& shipments, const vector<unique_ptr<Store>>& stores) {
     // assign shipments and stores
     for(const auto& shipment : shipments) {
@@ -182,7 +183,7 @@ PheromoneMatrix::PheromoneMatrix(const vector<unique_ptr<Shipment>>& shipments, 
     for(int i = 0; i < shipments.size(); i++) {
         vector<double> row;
         for(int j = 0; j < shipments.size(); j++) {
-            row.push_back(0.2);
+            row.push_back(0.01);
         }
         pheromoneMatrix.push_back(row);
     }
@@ -190,6 +191,8 @@ PheromoneMatrix::PheromoneMatrix(const vector<unique_ptr<Shipment>>& shipments, 
 
 // Show the pheromone matrix
 void PheromoneMatrix::showPheromoneMatrix() const {
+    cout << "------------------------------------------------- PHEROMONE MATRIX -------------------------------------------------" << endl;
+
     for(const auto& shipment : shipments) {
         // print characters between index 3-6
         cout << shipment.getStoreId().substr(3, 6) << " ";
@@ -204,6 +207,8 @@ void PheromoneMatrix::showPheromoneMatrix() const {
         }
         cout << shipments[i++].getStoreId().substr(3, 6) << endl;
     }
+
+    cout << "--------------------------------------------------------------------------------------------------------------------" << endl;
 }
 
 // display routes for ant
@@ -401,3 +406,76 @@ void Ant::generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, 
     }
 }
 
+/* ------------------------------------HEURISTIC MATRIX ------------------------------------ */
+
+HeuristicMatrix::HeuristicMatrix(const StoreManager& storeManager, DistanceDurationManager& distanceDurationManager, const ShipmentManager& shipmentManager) {
+    // push the stores with shipment
+    for(const auto& shipment : shipmentManager.getShipments()) {
+        if(shipment->getNoOfShipments() > 0) {
+            Store store = storeManager.getStoreById(shipment->getStoreId());
+            stores.push_back(store);
+        }
+    }
+
+    // generate heuristic matrix with initial value 0
+    for(int i = 0; i < stores.size(); i++) {
+        vector<double> row;
+        for(int j = 0; j < stores.size(); j++) {
+            row.push_back(0.0);
+        }
+        heuristicMatrix.push_back(row);
+    }
+
+    // get distance between stores from distanceDurationManager using vector<unique_ptr<StoresDistancesDurations>>& getStoresDistancesDurations() { return storesDistancesDurations; }
+    for(const auto& distanceDuration : distanceDurationManager.getStoresDistancesDurations()) {
+        // if current and next id is in the stores vector
+        for(const auto& store : stores) {
+            if(distanceDuration->getCurrentId() == store.getStoreId()) {
+                for(const auto& store2 : stores) {
+                    if(distanceDuration->getNextId() == store2.getStoreId()) {
+                        // assign the distance to the heuristic matrix
+                        for(int i = 0; i < stores.size(); i++) {
+                            if(stores[i].getStoreId() == distanceDuration->getCurrentId()) {
+                                for(int j = 0; j < stores.size(); j++) {
+                                    if(stores[j].getStoreId() == distanceDuration->getNextId()) {
+                                        double distance = stod(distanceDuration->getDistance());
+                                        heuristicMatrix[i][j] = distance;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }    
+}
+
+// display stores
+void HeuristicMatrix::displayStores() const {
+    for(const auto& store : stores) {
+        cout << store.getStoreId() << endl;
+    }
+    cout << endl;
+}
+
+// display heuristic matrix
+void HeuristicMatrix::displayHeuristicMatrix() const {
+    cout << "------------------------------------------------- HEURISTIC MATRIX -------------------------------------------------" << endl;
+    // print storeIds with first 7 characters
+    for(const auto& store : stores) {
+        cout << store.getStoreId().substr(3, 6) << " ";
+    }
+    cout << endl;
+
+    // print heuristic matrix
+    int i = 0;
+    for(const auto& row : heuristicMatrix) {
+        for(const auto& element : row) {
+            cout << fixed << setprecision(3) << setw(6) << element << " ";
+        }
+        cout << stores[i++].getStoreId().substr(3, 6) << endl;
+    }
+
+    cout << "--------------------------------------------------------------------------------------------------------------------" << endl;
+}

@@ -33,8 +33,7 @@ int main() {
     ShipmentManager shipmentManager;
     VehicleManager vehicleManager;
     DistanceDurationManager distanceDurationManager;
-    AntColony antColony = AntColony(numOfAnts, vehicleCapacity);
-
+    
     dbConnector.fetchStores(storesManager); // Fetch stores from the database and store them in storesManager vector
     dbConnector.fetchDepot(depotManager); // Fetch depot from the database and store them in depotManager vector
     dbConnector.fetchVehicles(vehicleManager); // Fetch vehicles from the database and store them in vehicleManager vector
@@ -42,42 +41,46 @@ int main() {
     dbConnector.fetchDepotDistancesDurations(distanceDurationManager, year, month, day);
     dbConnector.fetchShipments(shipmentManager, year, month, day); // Fetch shipments from the database and store them in shipmentManager vector
 
+    // creating ant colony and generating routes
+    AntColony antColony = AntColony(numOfAnts, vehicleCapacity);
     antColony.generateRoutes(storesManager, shipmentManager, vehicleManager, distanceDurationManager);
-    
-    // antColony.displayRoutes();
-
-    cout << "Total palette count: " << shipmentManager.getTotalPaletteCount() << endl;
-
-
     antColony.displayAnts();
 
-
+    // creating heuristic matrix based on distance between stores
+    HeuristicMatrix heuristicMatrix(storesManager, distanceDurationManager, shipmentManager);
+    heuristicMatrix.displayHeuristicMatrix();
+    
+    // creating pheromone matrix based on shipments
     PheromoneMatrix pheromoneMatrix(shipmentManager.getShipments(), storesManager.getStores());
-
     for(const auto& ant : antColony.getAnts()) {
-        // convert auto to Ant
         pheromoneMatrix.updatePheromoneMatrix(*ant);
     }
-    
-    cout << "--------------------------------------------------------------------------------------------------------\n";
     pheromoneMatrix.showPheromoneMatrix();
-    cout << "--------------------------------------------------------------------------------------------------------\n";
 
-    int numberOfIterations = 50;
+    int numberOfIterations = 10;
     int numberOfAnts = 20;
-
-    AntColony bestAntColony = AntColony(numberOfAnts, vehicleCapacity);
+    Ant bestAnt;
 
     // update pheromone matrix based on the best ants of each iteration
     for(int i = 0; i < numberOfIterations; i++) {
         AntColony antColonyPheromone = AntColony(numberOfAnts, vehicleCapacity);
         antColonyPheromone.generateRoutesBasedOnPheromoneMatrix(storesManager, shipmentManager, pheromoneMatrix, distanceDurationManager);
         antColonyPheromone.sortAntsByFitnessValue();
-        antColonyPheromone.displayAnts();
+
+        // update pheromone matrix based on the best ants of each iteration
+        pheromoneMatrix.updatePheromoneMatrix(antColonyPheromone.getBestAnt());
+
+        if(i == numberOfIterations - 1) {
+            antColonyPheromone.displayAnts();
+        }
+        // if(i % 50 == 0) {
+        //     antColonyPheromone.displayAnts();
+        // }
     }
 
-    bestAntColony.displayAnts();
+    pheromoneMatrix.showPheromoneMatrix();
 
+    
 
 
 
