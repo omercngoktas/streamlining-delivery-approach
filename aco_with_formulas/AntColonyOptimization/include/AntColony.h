@@ -7,6 +7,7 @@
 #include <cstdlib> // for rand() and srand()
 #include <ctime>   // for time()
 #include <iomanip> // Include for std::setw and std::left
+#include <math.h>  // for pow()
 
 #include "StoreManager.h"
 #include "VehicleManager.h"
@@ -28,6 +29,9 @@ class Ant {
         ~Ant() = default;
         void generateRoute(const StoreManager& storeManager, const ShipmentManager& shipmentManager, const VehicleManager& vehicleManager, const DistanceDurationManager& distanceDurationManager);
         void addRoute(const Route& route) { routes.push_back(make_unique<Route>(route)); }
+        void insertRoute(const Route& route) { routes.push_back(make_unique<Route>(route)); }
+        void setRoutes(vector<unique_ptr<Route>> routes) { this->routes = move(routes); }
+        void clearRoutes() { routes.clear(); }
         // get routes
         const vector<unique_ptr<Route>>& getRoutes() const { return routes; }
         // Getters
@@ -48,7 +52,7 @@ class Ant {
         void setPheromone(double pheromone) { this->pheromone = pheromone; }
         void displayRoutes() const;
         // generate route based on pheromone matrix
-        void generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix);
+        void generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix, const HeuristicMatrix& heuristicMatrix);
 
     private:
         vector<unique_ptr<Route>> routes;
@@ -74,7 +78,7 @@ class AntColony {
         // return ants
         const vector<unique_ptr<Ant>>& getAnts() const { return ants; }
         // generating routes based on pheromone matrix
-        void generateRoutesBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix, const DistanceDurationManager& distanceDurationManager);
+        void generateRoutesBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix, const DistanceDurationManager& distanceDurationManager, const HeuristicMatrix& heuristicMatrix);
         void insertAnt(Ant& ant);
         Ant& getBestAnt() { return *ants[0]; }
 
@@ -92,9 +96,12 @@ class PheromoneMatrix {
         // constructor with unique_ptr Store vector
         PheromoneMatrix(const vector<unique_ptr<Shipment>>& shipments, const vector<unique_ptr<Store>>& stores);
         void showPheromoneMatrix() const;
-        void updatePheromoneMatrix(Ant& ant);
-        void updatePheromoneMatrixForRoute(string storeId1, string storeId2, double pheromone);
-        string getNextStoreByPheromone(string storeId, vector<Shipment>& remainedShipments);
+        void buildPheromoneMatrix(Ant& ant);
+        void evaporatePheromoneMatrix(const AntColony& antColonyPheromone);
+        
+        string getNextStoreByPheromone(string storeId, vector<Shipment>& remainedShipments, const HeuristicMatrix& heuristicMatrix);
+        void pheromoneDeposition(AntColony& antColonyPheromone);
+
 
     private:
         vector<vector<double>> pheromoneMatrix;
@@ -110,6 +117,7 @@ class HeuristicMatrix {
         void displayHeuristicMatrix() const;
         double getHeuristicValue(string storeId1, string storeId2) const;
         void displayStores() const;
+        vector<vector<double>> getHeuristicMatrix() const { return heuristicMatrix; }
 
     private:
         vector<vector<double>> heuristicMatrix;

@@ -172,6 +172,8 @@ void AntColony::sortAntsByFitnessValue() {
 
 // Pheromone matrix constructor
 PheromoneMatrix::PheromoneMatrix(const vector<unique_ptr<Shipment>>& shipments, const vector<unique_ptr<Store>>& stores) {
+    double initialPheromone = 1.0;
+
     // assign shipments and stores
     for(const auto& shipment : shipments) {
         this->shipments.push_back(*shipment);
@@ -183,7 +185,7 @@ PheromoneMatrix::PheromoneMatrix(const vector<unique_ptr<Shipment>>& shipments, 
     for(int i = 0; i < shipments.size(); i++) {
         vector<double> row;
         for(int j = 0; j < shipments.size(); j++) {
-            row.push_back(0.01);
+            row.push_back(initialPheromone);
         }
         pheromoneMatrix.push_back(row);
     }
@@ -219,7 +221,7 @@ void Ant::displayRoutes() const {
 }
 
 // update pheromone matrix
-void PheromoneMatrix::updatePheromoneMatrix(Ant& ant) {
+void PheromoneMatrix::buildPheromoneMatrix(Ant& ant) {
     double pheromone = ant.getPheromone();
     
     for(const auto& route : ant.getRoutes()) {
@@ -234,7 +236,7 @@ void PheromoneMatrix::updatePheromoneMatrix(Ant& ant) {
                     store2Index = j;
                 }
             }
-            //find index for store1 and store2 in the pheromone matrix
+            // find index for store1 and store2 in the pheromone matrix
             for(int k = 0; k < shipments.size(); k++) {
                 if(shipments[k].getStoreId() == route->getStores()[i]->getStoreId()) {
                     store1Index = k;
@@ -253,55 +255,74 @@ void PheromoneMatrix::updatePheromoneMatrix(Ant& ant) {
     }
 }
 
-// update pheromone matrix for route
-void PheromoneMatrix::updatePheromoneMatrixForRoute(string storeId1, string storeId2, double pheromone) {
-    int store1Index = -1;
-    int store2Index = -1;
-    for(int i = 0; i < stores.size(); i++) {
-        if(stores[i].getStoreId() == storeId1) {
-            store1Index = i;
-        }
-        if(stores[i].getStoreId() == storeId2) {
-            store2Index = i;
-        }
-    }
-    if(store1Index != -1 && store2Index != -1) {
-        pheromoneMatrix[store1Index][store2Index] = pheromone;
-    }
-}
-
 // with the given storeId, returns the next storeId with the highest pheromone
-string PheromoneMatrix::getNextStoreByPheromone(string storeId, vector<Shipment>& remainedShipments) {
-    int storeIndex = -1;
+string PheromoneMatrix::getNextStoreByPheromone(string storeId, vector<Shipment>& remainedShipments, const HeuristicMatrix& heuristicMatrix) {
+    int storeIndexInShipments = -1;
     int highestPheromoneIndex = -1;
     double highestPheromone = 0.0;
-    
+    double alpha = 2.0;
+    double beta = 5.0;
+    double sum = 0.0;
+    double pij = 0.0;
+
+    // find the index of the storeId for the pheromone matrix
     for(int i = 0; i < shipments.size(); i++) {
         if(shipments[i].getStoreId() == storeId) {
-            storeIndex = i;
+            storeIndexInShipments = i;
             break;
         }
     }
-
-    for(int j = 0; j < pheromoneMatrix[storeIndex].size(); j++) {
-        if(pheromoneMatrix[storeIndex][j] > highestPheromone) {
-            for(Shipment shipment : remainedShipments) {
-                if(shipment.getStoreId() == shipments[j].getStoreId()) {
-                    highestPheromone = pheromoneMatrix[storeIndex][j];
-                    highestPheromoneIndex = j;
-                }
+    // selecting next store based on the heuristic and pheromone matrix with the formula 
+    // pij = [τij] ^ α * [ηij] ^ β / Σ[τik] ^ α * [ηik] ^ β
+    // pij = (pheromoneMatrix[i][j] ^ alpha) * (heuristicMatrix[i][j] ^ beta) / sum(pheromoneMatrix[i][k] ^ alpha * heuristicMatrix[i][k] ^ beta)
+    for(int m = 0; m < shipments.size(); m++) {
+        for(int n = 0; n < remainedShipments.size(); n++) {
+            if(shipments[m].getStoreId() == remainedShipments[n].getStoreId()) {
+                sum += pow(pheromoneMatrix[storeIndexInShipments][n], alpha) * pow((1 / (heuristicMatrix.getHeuristicMatrix()[storeIndexInShipments][n])), beta);
             }
         }
     }
 
-    return shipments[highestPheromoneIndex].getStoreId();
+    vector<double> pijVector;
+    // calculate pij for each store
+    for(int i = 0; i < shipments.size(); i++) {
+        for(int j = 0; j < remainedShipments.size(); j++) {
+            if(shipments[i].getStoreId() == remainedShipments[j].getStoreId()) {
+                pij = (pow(pheromoneMatrix[storeIndexInShipments][j], alpha) * pow((1 / (heuristicMatrix.getHeuristicMatrix()[storeIndexInShipments][j])), beta)) / sum;
+                pijVector.push_back(pij);
+                if(pij > highestPheromone) {
+                    highestPheromone = pij;
+                    highestPheromoneIndex = j;
+                    // cout << "Highest Pheromone: " << highestPheromone << " Highest pheromone index: " << highestPheromoneIndex << endl;
+                }
+            }
+        }
+    }
+    // if there is no highest pheromone, select the first store in the remained shipments
+    if(highestPheromoneIndex == -1) {
+        return remainedShipments[0].getStoreId();
+    }
+
+    // generate a random number between 0-1
+    double random = (double)rand() / RAND_MAX;
+
+    // if the results are 0.1 0.2 0.15 0.25 0.3, and if the random number is 0.45, 0.1+0.2+0.15 = 0.45, so 0.15 should be selected
+    double sumPij = 0.0;
+    for(int i = 0; i < pijVector.size(); i++) {
+        sumPij += pijVector[i];
+        if(random <= sumPij) {
+            // cout << "Random: " << random << " SumPij: " << sumPij << " Pij: " << pijVector[i] << endl;
+            return remainedShipments[i].getStoreId();
+        }
+    }
+    return remainedShipments[highestPheromoneIndex].getStoreId();
 }
 
 // generate routes based on pheromone matrix for ant colony
-void AntColony::generateRoutesBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix, const DistanceDurationManager& distanceDurationManager) {
+void AntColony::generateRoutesBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix, const DistanceDurationManager& distanceDurationManager, const HeuristicMatrix& heuristicMatrix) {
     for(int i = 0; i < numOfAnts; i++) {
         auto ant = std::make_unique<Ant>(vehicleCapacity);
-        ant->generateRouteBasedOnPheromoneMatrix(storeManager, shipmentManager, pheromoneMatrix);
+        ant->generateRouteBasedOnPheromoneMatrix(storeManager, shipmentManager, pheromoneMatrix, heuristicMatrix);
         ants.push_back(move(ant));
     }
 
@@ -337,7 +358,7 @@ void AntColony::generateRoutesBasedOnPheromoneMatrix(const StoreManager& storeMa
 }
 
 // generate route based on pheromone matrix for ant
-void Ant::generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix) {
+void Ant::generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix, const HeuristicMatrix& heuristicMatrix) {
     vector<Shipment> remainedShipments;
     for(const auto& shipment : shipmentManager.getShipments()) { if(shipment->getNoOfShipments() > 0) { remainedShipments.push_back(*shipment); } }
     int currentCapacity;
@@ -349,9 +370,6 @@ void Ant::generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, 
 
         Shipment currentShipment = shipmentManager.getRandShipment(remainedShipments);
         string currentStoreId = currentShipment.getStoreId();
-        // cout << "-------------------------------------------" << endl;
-        // cout << "remainedShipments capacity: " << remainedShipments.size() << endl;
-        // cout << "-------------------------------------------" << endl;
 
         // while the current capacity is less than the vehicle capacity and there are still shipments to be delivered
         while(currentCapacity < this->vehicleCapacity && !remainedShipments.empty()) {
@@ -371,15 +389,10 @@ void Ant::generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, 
                 // remove the shipment from remainedShipments
                 shipmentManager.removeShipment(remainedShipments, currentShipment.getShipmentId());
                 
-                // currentStoreId = pheromoneMatrix.getNextStoreByPheromone(currentStoreId, remainedShipments);
-                // currentShipment = shipmentManager.getShipmentByStoreId(currentStoreId);
-                // cout << "****** In if statement" << endl;
             } 
             // capacity is not exceeded when the current shipment is added
             else {
-                // cout << "Current capacity before addition: " << currentCapacity << endl;
                 currentCapacity += currentShipment.getNoOfShipments();
-                // cout << "Current capacity after addition: " << currentCapacity << endl;
 
                 shared_ptr<Shipment> currentShipmentPtr = make_shared<Shipment>(currentShipment);
                 Store store = storeManager.getStoreById(currentShipment.getStoreId());
@@ -387,17 +400,19 @@ void Ant::generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, 
                 route.addVisitPoint(storePtr, currentShipmentPtr);
 
                 // remove the shipment from remainedShipments
-                // cout << "Number of shipments before removal: " << remainedShipments.size() << endl;
                 if(remainedShipments.size() == 1) {
                     this->addRoute(route);
                     this->numberOfVehicleUsed++;
                     return;
                 }
                 shipmentManager.removeShipment(remainedShipments, currentShipment.getShipmentId());
-                // cout << "Number of shipments after removal: " << remainedShipments.size() << endl;
                 // get the next store based on the pheromone matrix
-                currentStoreId = pheromoneMatrix.getNextStoreByPheromone(currentStoreId, remainedShipments);
+
+
+                currentStoreId = pheromoneMatrix.getNextStoreByPheromone(currentStoreId, remainedShipments, heuristicMatrix);
                 currentShipment = shipmentManager.getShipmentByStoreId(currentStoreId);
+
+
             }
             
         }
@@ -478,4 +493,53 @@ void HeuristicMatrix::displayHeuristicMatrix() const {
     }
 
     cout << "--------------------------------------------------------------------------------------------------------------------" << endl;
+}
+
+// Evaporate pheromone matrix
+void PheromoneMatrix::evaporatePheromoneMatrix(const AntColony& antColonyPheromone) {
+    // Evaporation formula: τij ← (1−ρ) * τij
+    // pheromoneMatrix[i][j] = (1 - p) * pheromoneMatrix[i][j]
+    double p = 0.1;
+    for(int i = 0; i < pheromoneMatrix.size(); i++) {
+        for(int j = 0; j < pheromoneMatrix[i].size(); j++) {
+            pheromoneMatrix[i][j] = (1 - p) * pheromoneMatrix[i][j];
+        }
+    }
+}
+
+// Deposit pheromone to the pheromone matrix
+void PheromoneMatrix::pheromoneDeposition(AntColony& antColonyPheromone) {
+    // Deposition: order of the current ant / fitness value of the current ant
+    // If there are 20 ants, first ant will update the pheromone matrix with the value:
+    // x + 1 / fitness value of the first ant, where x is the current value in the pheromone matrix
+    // for the second ant x + 2 / fitness value of the second ant, and so on.
+
+    for(int i = 0; i < antColonyPheromone.getAnts().size(); i++) {
+        double fitnessValue = antColonyPheromone.getAnt(i).getFitnessValue();
+        for(const auto& route : antColonyPheromone.getAnt(i).getRoutes()) {
+            for(int j = 0; j < route->getStores().size() - 1; j++) {
+                int store1Index = -1;
+                int store2Index = -1;
+
+                for(int k = 0; k < shipments.size(); k++) {
+                    if(shipments[k].getStoreId() == route->getStores()[j]->getStoreId()) {
+                        store1Index = k;
+                    }
+                    if(shipments[k].getStoreId() == route->getStores()[j + 1]->getStoreId()) {
+                        store2Index = k;
+                    }
+                }
+                
+                if(store1Index != -1 && store2Index != -1) {
+                    pheromoneMatrix[store1Index][store2Index] += (i + 1) / fitnessValue;
+                    pheromoneMatrix[store2Index][store1Index] += (i + 1) / fitnessValue;
+                }
+
+                
+
+            }
+        }
+    }
+
+    
 }
