@@ -11,6 +11,25 @@
 
 using namespace std;
 
+void writeToFile(const string& fileName, Ant& ant, Depot& depot) {
+    // routes will be written to csv file
+    // column names: route, latitude, longitude
+    ofstream file(fileName);
+    
+    // route number will be determined by for loop from 1 to number of routes
+    int routeNumber = 1;
+    file << "route,latitude,longitude" << endl;
+
+    for(const auto& route : ant.getRoutes()) {
+        file << routeNumber << "," << depot.getLatitude() << "," << depot.getLongitude() << endl;
+        for(const auto& store : route->getStores()) {
+            file << routeNumber << "," <<  store->getLatitude() << "," << store->getLongitude() << endl;
+        }
+        file << routeNumber << "," << depot.getLatitude() << "," << depot.getLongitude() << endl;
+        routeNumber++;
+    }
+}
+
 int main() {
     srand(time(0));
 
@@ -57,8 +76,8 @@ int main() {
     }
     pheromoneMatrix.showPheromoneMatrix();
 
-    int numberOfIterations = 2000;
-    int numberOfAnts = 50;
+    int numberOfIterations = 50;
+    int numberOfAnts = 10;
     Ant *bestAnt = new Ant();
 
     // update pheromone matrix based on the best ants of each iteration
@@ -95,8 +114,10 @@ int main() {
     }
 
     bestAnt->displayRoutes();
-
-    pheromoneMatrix.showPheromoneMatrix();
+    cout << "Best ant fitness value: " << bestAnt->getFitnessValue() << endl;
+    cout << "Best ant total distance: " << bestAnt->getTotalDistance() << endl;
+    
+    writeToFile("/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_with_formulas/map_draw/routes.csv", *bestAnt, depotManager.getDepot());
 
     return 0;
 }

@@ -1,1 +1,0 @@
-from .photo import Photo

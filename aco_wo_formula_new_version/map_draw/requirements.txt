@@ -1,0 +1,10 @@
+gmplot
+selenium
+webdriver_manager
+folium
+pandas
+openpyxl
+osmnx
+networkx
+scikit-learn
+geopy

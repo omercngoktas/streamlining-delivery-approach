@@ -131,6 +131,17 @@ def multiprocess_handler(cpu_count, stores, depot_df, stores_with_shipment):
     # get the distance and duration between the depot and the stores
     multiprocess_handler.create_pool_for_depot()
 
+def insert_distance_duration_to_database(db):
+    stores_distance_duration = pd.read_csv("../data/distance_duration/stores_distance_duration.csv")
+    depot_distance_duration = pd.read_csv("../data/distance_duration/depot_distance_duration.csv")
+    # for index, row in stores_distance_duration.iterrows():
+    #     db.insert("stores_distances_durations", "st_dist_dura_id, date, current_id, current_latitude, current_longitude, duration, distance, next_id, next_latitude, next_longitude", "'{}', '{}', '{}', {}, {}, '{}', '{}', '{}', {}, {}".format(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]))
+    #     print(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
+        
+    # for index, row in depot_distance_duration.iterrows():
+    #     db.insert("depots_distances_durations", "dp_dist_dura_id, date, depot_id, depot_latitude, depot_longitude, duration, distance, next_id, next_latitude, next_longitude", "'{}', '{}', '{}', {}, {}, '{}', '{}', '{}', {}, {}".format(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9]))
+    #     print(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
+
 def main():
     # Database connection
     db = MySQL_Manager("localhost", "omercngoktas", "mwanamboka", "mydatabase")
@@ -139,11 +150,13 @@ def main():
     # specifying the day to get the shipment, cpu_count, and output_path
     start_time = time.time()
     today = datetime.date.today()
-    day = today.day
-    month = today.month
-    year = today.year
+    day = 19
+    month = 5
+    year = 2024
     cpu_count = 12
     output_path = "../data/output"
+    
+    # insert_distance_duration_to_database(db)
     
     # create the csv files
     create_csv_files(output_path)

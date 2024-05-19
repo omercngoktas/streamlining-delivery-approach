@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_wo_formula/venv"
+set -gx VIRTUAL_ENV "/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_wo_formula_new_version/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
