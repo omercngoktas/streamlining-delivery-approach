@@ -1,0 +1,7 @@
+pip install gmplot
+pip install selenium webdriver_manager
+pip install folium
+pip install pandas
+pip install openpyxl
+pip install osmnx networkx
+pip install scikit-learn
