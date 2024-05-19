@@ -133,6 +133,8 @@ int main() {
 
     pheromoneMatrix.showPheromoneMatrix();
 
+    bestAnt->generateBestRoute(storesManager, shipmentManager, depotManager);
+
     writeToFile("/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_wo_formula_new_version/map_draw/routes.csv", *bestAnt, depotManager.getDepot());
 
     return 0;

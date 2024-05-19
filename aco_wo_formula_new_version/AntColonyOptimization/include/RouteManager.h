@@ -34,6 +34,7 @@ class Route {
         void calculateTotalPaletteCount();
         void setPheromone(double pheromone) { this->pheromone = pheromone; }
         int getDistanceBetweenStores(const Store& store1, const Store& store2, const DistanceDurationManager& distanceDurationManager);
+        // void removeStore(const string& storeId);
 
     private:
         vector<shared_ptr<Store>> stores;

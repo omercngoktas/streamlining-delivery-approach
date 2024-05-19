@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cctype>
 #include <memory>
+#include <cmath>
 
 using namespace std;
 
@@ -36,8 +37,9 @@ class Store {
         void setLatitude(const double& latitude) { this->latitude = latitude; }
         void setLongitude(const double& longitude) { this->longitude = longitude; }
         void setNumOfPallets(const int& num_of_pallets) { this->num_of_pallets = num_of_pallets; }
-
         void displayStore() const;
+
+        double getDistanceToStore(double storeLatitude, double storeLongitude);
 
     private:
         string store_id;

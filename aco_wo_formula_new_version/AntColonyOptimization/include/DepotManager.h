@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <math.h>
 
 using namespace std;
 
@@ -24,6 +25,7 @@ class Depot {
         void setDepotAddress(string depot_address) { this->depot_address = depot_address; }
         void setLatitude(double latitude) { this->latitude = latitude; }
         void setLongitude(double longitude) { this->longitude = longitude; }
+        double getDistanceToStore(double storeLatitude, double storeLongitude);
     
     private:
         string depot_id;

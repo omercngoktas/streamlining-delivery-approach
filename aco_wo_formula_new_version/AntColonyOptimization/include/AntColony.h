@@ -14,6 +14,7 @@
 #include "DistanceDurationManager.h"
 #include "ShipmentManager.h"
 #include "RouteManager.h"
+#include "DepotManager.h"
 
 using namespace std;
 
@@ -53,6 +54,8 @@ class Ant {
         void displayRoutes() const;
         // generate route based on pheromone matrix
         void generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, const ShipmentManager& shipmentManager, PheromoneMatrix& pheromoneMatrix, const HeuristicMatrix& heuristicMatrix);
+        void generateBestRoute(StoreManager& storeManager, ShipmentManager& shipmentManager, DepotManager& depotManager);
+        // void removeStoreFromShipment(string storeId);
 
     private:
         vector<unique_ptr<Route>> routes;

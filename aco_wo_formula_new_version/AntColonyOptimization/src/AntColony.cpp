@@ -501,12 +501,64 @@ void PheromoneMatrix::pheromoneDeposition(AntColony& antColonyPheromone) {
                     pheromoneMatrix[store1Index][store2Index] += (i + 1) / fitnessValue;
                     pheromoneMatrix[store2Index][store1Index] += (i + 1) / fitnessValue;
                 }
-
-                
-
             }
         }
     }
-
-    
 }
+
+void Ant::generateBestRoute(StoreManager& storeManager, ShipmentManager& shipmentManager, DepotManager& depotManager) {
+    // from the current routes, best order of the stores should be found
+    // first of all, closest store to the depot should be found and added to the route
+    // then, the closest store to the last store should be found and added to the route
+    // this process should be repeated until all the stores are visited
+
+    // get the depot
+    Depot depot = depotManager.getDepot();
+    vector<Route> bestRoutes;
+    for(int i = 0; i < this->routes.size(); i++) {
+        Store closestStoreToDepot;
+        double minDistance = 999999999.0;
+        
+        for(int j = 0; j < this->routes[i]->getStores().size(); j++) {
+            double distance = depot.getDistanceToStore(this->routes[i]->getStores()[j]->getLatitude(), this->routes[i]->getStores()[j]->getLongitude());
+            if(distance < minDistance) {
+                minDistance = distance;
+                closestStoreToDepot = storeManager.getStoreById(this->routes[i]->getStores()[j]->getStoreId());
+            }
+        }
+
+        // add the closest store to the depot to the route
+        shared_ptr<Store> closestStoreToDepotPtr = make_shared<Store>(closestStoreToDepot);
+        shared_ptr<Shipment> shipment = make_shared<Shipment>(shipmentManager.getShipmentByStoreId(closestStoreToDepot.getStoreId()));
+        Route route;
+        route.addVisitPoint(closestStoreToDepotPtr, shipment);
+        bestRoutes.push_back(route);
+    }
+
+    // finding closest store to the stores in order
+    for(int i = 0; i < this->routes.size(); i++) {
+        for(int j = 0; j < this->routes[i]->getStores().size(); j++) {
+            Store closestStore;
+            double minDistance = 999999999.0;
+            for(int k = 0; k < bestRoutes[i].getStores().size(); k++) {
+                if(this->routes[i]->getStores()[j]->getStoreId() == bestRoutes[i].getStores()[k]->getStoreId()) {
+                    continue;
+                }
+                double distance = bestRoutes[i].getStores()[k]->getDistanceToStore(this->routes[i]->getStores()[j]->getLatitude(), this->routes[i]->getStores()[j]->getLongitude());
+                if(distance < minDistance) {
+                    minDistance = distance;
+                    closestStore = storeManager.getStoreById(this->routes[i]->getStores()[j]->getStoreId());
+                }
+            }
+            shared_ptr<Store> closestStorePtr = make_shared<Store>(closestStore);
+            shared_ptr<Shipment> shipment = make_shared<Shipment>(shipmentManager.getShipmentByStoreId(closestStore.getStoreId()));
+            bestRoutes[i].addVisitPoint(closestStorePtr, shipment);
+        }
+    }
+
+    // // display the best routes
+    // for(auto& route : bestRoutes) {
+    //     route.displayRoute();
+    // }
+}
+

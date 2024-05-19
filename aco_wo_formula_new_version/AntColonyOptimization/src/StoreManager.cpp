@@ -59,3 +59,9 @@ Store StoreManager::getStoreById(const string& store_id) const {
     }
     throw invalid_argument("Store ID not found");
 }
+
+// get distance between store and store
+double Store::getDistanceToStore(double storeLatitude, double storeLongitude) {
+    double distance = sqrt(pow(storeLatitude - latitude, 2) + pow(storeLongitude - longitude, 2));
+    return distance;
+}

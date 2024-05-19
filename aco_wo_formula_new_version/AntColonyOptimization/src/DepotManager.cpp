@@ -20,3 +20,9 @@ void DepotManager::displayDepot() {
     cout << "Latitude: " << depot->getLatitude() << "\t";
     cout << "Longitude: " << depot->getLongitude() << endl;
 }
+
+// Get the distance to the store
+double Depot::getDistanceToStore(double storeLatitude, double storeLongitude) {
+    double distance = sqrt(pow(storeLatitude - latitude, 2) + pow(storeLongitude - longitude, 2));
+    return distance;
+}
