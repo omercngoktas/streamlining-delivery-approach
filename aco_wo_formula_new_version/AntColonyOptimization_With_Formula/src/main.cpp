@@ -87,8 +87,9 @@ int main(int argc, char* argv[]) {
     }
     // pheromoneMatrix.showPheromoneMatrix();
 
-    int numberOfIterations = 20;
-    int numberOfAnts = 20;
+    int numberOfIterations = atoi(argv[6]);
+    int numberOfAnts = atoi(argv[7]);
+    
     Ant *bestAnt = new Ant();
 
     cout << "Year: " << year << " Month: " << month << " Day: " << day << endl;
@@ -98,6 +99,9 @@ int main(int argc, char* argv[]) {
     cout << "Number of ants: " << numberOfAnts << endl;
 
     antColony.getAnts()[0]->displayRoutes();
+
+    cout << "Size of pheromone matrix: " << pheromoneMatrix.getPheromoneMatrix().size() << endl;
+    cout << "Size of heuristic matrix: " << heuristicMatrix.getHeuristicMatrix().size() << " x " << heuristicMatrix.getHeuristicMatrix()[0].size() << endl;
 
     // update pheromone matrix based on the best ants of each iteration
     for(int i = 0; i < numberOfIterations; i++) {

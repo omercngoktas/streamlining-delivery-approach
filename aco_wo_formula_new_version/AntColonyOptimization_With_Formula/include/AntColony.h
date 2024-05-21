@@ -98,7 +98,7 @@ class PheromoneMatrix {
         void showPheromoneMatrix() const;
         void buildPheromoneMatrix(Ant& ant);
         void evaporatePheromoneMatrix(const AntColony& antColonyPheromone);
-        
+        vector<vector<double>> getPheromoneMatrix() const { return pheromoneMatrix; }
         string getNextStoreByPheromone(string storeId, vector<Shipment>& remainedShipments, const HeuristicMatrix& heuristicMatrix);
         void pheromoneDeposition(AntColony& antColonyPheromone);
 
@@ -118,6 +118,7 @@ class HeuristicMatrix {
         double getHeuristicValue(string storeId1, string storeId2) const;
         void displayStores() const;
         vector<vector<double>> getHeuristicMatrix() const { return heuristicMatrix; }
+        vector<Store> getStores() const { return stores; }
 
     private:
         vector<vector<double>> heuristicMatrix;

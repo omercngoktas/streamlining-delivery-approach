@@ -11,6 +11,8 @@ import sys
 
 output_name = sys.argv[1]
 
+date = today = time.strftime("%Y-%m-%d")
+
 # Read optimized routes CSV file
 csv_file = "./optimized_routes.csv"
 try:
@@ -41,7 +43,7 @@ initial_location = [average_lat, average_lon]
 mymap = folium.Map(location=initial_location, zoom_start=12)
 
 # Define color list for routes
-colors = ['blue', 'green', 'red', 'purple', 'orange', 'darkred', 'darkblue', 'darkgreen', 'darkpurple', 'gray', 'black']
+colors = ['blue', 'green', 'red', 'purple', 'orange', 'darkred', 'darkblue', 'darkgreen','black',  'darkpurple', 'gray']
 
 # Find unique routes
 routes = df['route'].unique()
@@ -91,7 +93,7 @@ except Exception as e:
 mymap.fit_bounds(all_coordinates)
 
 # Define temporary file name and path
-html_file = f"{output_name}_map.html"
+html_file = f"{output_name}_{date}_map.html"
 html_path = os.path.abspath(html_file)
 
 # Save map to HTML file
@@ -112,7 +114,7 @@ driver.get("file://" + html_path)
 time.sleep(5)
 
 # Take screenshot and save
-screenshot_path = f"{output_name}_map_screenshot.png"
+screenshot_path = f"{output_name}_{date}_map_screenshot.png"
 driver.save_screenshot(screenshot_path)
 
 # Close the browser

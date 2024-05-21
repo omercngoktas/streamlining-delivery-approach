@@ -258,6 +258,7 @@ void PheromoneMatrix::buildPheromoneMatrix(Ant& ant) {
 // with the given storeId, returns the next storeId with the highest pheromone
 string PheromoneMatrix::getNextStoreByPheromone(string storeId, vector<Shipment>& remainedShipments, const HeuristicMatrix& heuristicMatrix) {
     int storeIndexInShipments = -1;
+    int storeIndexInHeuristicMatrix = -1;
     int highestPheromoneIndex = -1;
     double highestPheromone = 0.0;
     double alpha = 2.0;
@@ -272,13 +273,20 @@ string PheromoneMatrix::getNextStoreByPheromone(string storeId, vector<Shipment>
             break;
         }
     }
+    for(int i = 0; i < heuristicMatrix.getHeuristicMatrix().size(); i++) {
+        if(heuristicMatrix.getStores()[i].getStoreId() == storeId) {
+            storeIndexInHeuristicMatrix = i;
+            break;
+        }
+    }
+
     // selecting next store based on the heuristic and pheromone matrix with the formula 
     // pij = [τij] ^ α * [ηij] ^ β / Σ[τik] ^ α * [ηik] ^ β
     // pij = (pheromoneMatrix[i][j] ^ alpha) * (heuristicMatrix[i][j] ^ beta) / sum(pheromoneMatrix[i][k] ^ alpha * heuristicMatrix[i][k] ^ beta)
     for(int m = 0; m < shipments.size(); m++) {
         for(int n = 0; n < remainedShipments.size(); n++) {
-            if(shipments[m].getStoreId() == remainedShipments[n].getStoreId()) {
-                sum += pow(pheromoneMatrix[storeIndexInShipments][n], alpha) * pow((1 / (heuristicMatrix.getHeuristicMatrix()[storeIndexInShipments][n])), beta);
+            if(this->shipments[m].getStoreId() == remainedShipments[n].getStoreId()) {
+                sum += pow(pheromoneMatrix[storeIndexInShipments][n], alpha) * pow((1 / (heuristicMatrix.getHeuristicMatrix()[storeIndexInHeuristicMatrix][n])), beta);
             }
         }
     }
@@ -288,7 +296,8 @@ string PheromoneMatrix::getNextStoreByPheromone(string storeId, vector<Shipment>
     for(int i = 0; i < shipments.size(); i++) {
         for(int j = 0; j < remainedShipments.size(); j++) {
             if(shipments[i].getStoreId() == remainedShipments[j].getStoreId()) {
-                pij = (pow(pheromoneMatrix[storeIndexInShipments][j], alpha) * pow((1 / (heuristicMatrix.getHeuristicMatrix()[storeIndexInShipments][j])), beta)) / sum;
+                pij = (pow(pheromoneMatrix[storeIndexInShipments][j], alpha) * pow((1 / (heuristicMatrix.getHeuristicMatrix()[storeIndexInHeuristicMatrix][j])), beta)) / sum;
+                // pij = 0.1;
                 pijVector.push_back(pij);
                 if(pij > highestPheromone) {
                     highestPheromone = pij;
@@ -374,7 +383,7 @@ void Ant::generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, 
         // while the current capacity is less than the vehicle capacity and there are still shipments to be delivered
         while(currentCapacity < this->vehicleCapacity && !remainedShipments.empty()) {
             // capacity is exceeded when the current shipment is added
-            if(currentCapacity < this->vehicleCapacity && currentCapacity + currentShipment.getNoOfShipments() > this->vehicleCapacity) {
+            if(currentCapacity < this->vehicleCapacity && currentCapacity + currentShipment.getNoOfShipments() >= this->vehicleCapacity) {
                 currentCapacity += currentShipment.getNoOfShipments();
                 shared_ptr<Shipment> currentShipmentPtr = make_shared<Shipment>(currentShipment);
                 Store store = storeManager.getStoreById(currentShipment.getStoreId());
@@ -398,20 +407,18 @@ void Ant::generateRouteBasedOnPheromoneMatrix(const StoreManager& storeManager, 
                 Store store = storeManager.getStoreById(currentShipment.getStoreId());
                 shared_ptr<Store> storePtr = make_shared<Store>(store);
                 route.addVisitPoint(storePtr, currentShipmentPtr);
-
                 // remove the shipment from remainedShipments
                 if(remainedShipments.size() == 1) {
                     this->addRoute(route);
                     this->numberOfVehicleUsed++;
                     return;
                 }
+
                 shipmentManager.removeShipment(remainedShipments, currentShipment.getShipmentId());
                 // get the next store based on the pheromone matrix
 
-
                 currentStoreId = pheromoneMatrix.getNextStoreByPheromone(currentStoreId, remainedShipments, heuristicMatrix);
                 currentShipment = shipmentManager.getShipmentByStoreId(currentStoreId);
-
 
             }
             
