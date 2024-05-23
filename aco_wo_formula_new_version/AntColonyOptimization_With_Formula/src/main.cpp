@@ -31,7 +31,9 @@ void writeToFile(const string& fileName, Ant& ant, Depot& depot) {
 }
 
 int main(int argc, char* argv[]) {
-    if(argc != 8) {
+    for(int iterationNumber = 0; iterationNumber < atoi(argv[8]); iterationNumber++) {
+
+    if(argc != 9) {
         cout << "Usage: " << argv[0] << " <year> <month> <day> <numOfInitialAnts> <vehicleCapacity> <numOfIterations> <numOfAnts>" << endl;
         return 1;
     }
@@ -138,9 +140,19 @@ int main(int argc, char* argv[]) {
     bestAnt->displayRoutes();
     cout << "Best ant fitness value: " << bestAnt->getFitnessValue() << endl;
     cout << "Best ant total distance: " << bestAnt->getTotalDistance() << endl;
-    
-    writeToFile("/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_wo_formula_new_version/map_draw/routes.csv", *bestAnt, depotManager.getDepot());
 
+    // current clock time hour and minute to variable
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    int currentHour = ltm->tm_hour;
+    int currentMinute = ltm->tm_min;
+    
+
+    //file name is iteration_number_numOfInitialAnts_numOfIterations_numOfAnts_routes_wo_formula.csv
+    string fileName = to_string(iterationNumber) + "_" + to_string(numOfAnts) + "_" + to_string(numberOfIterations) + "_" + to_string(numberOfAnts) + "_routes_with_formula.csv";
+    
+    writeToFile("/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_wo_formula_new_version/output/" + fileName , *bestAnt, depotManager.getDepot());
+    }
     return 0;
 }
 
