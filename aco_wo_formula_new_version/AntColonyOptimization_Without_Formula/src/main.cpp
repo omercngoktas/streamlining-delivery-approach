@@ -91,11 +91,13 @@ int main(int argc, char* argv[]) {
         
         // creating pheromone matrix based on shipments
         PheromoneMatrix pheromoneMatrix(shipmentManager.getShipments(), storesManager.getStores());
-        for(const auto& ant : antColony.getAnts()) {
-            pheromoneMatrix.buildPheromoneMatrix(*ant);
-        }
-        // pheromoneMatrix.showPheromoneMatrix();
+        // for(const auto& ant : antColony.getAnts()) {
+        //     pheromoneMatrix.buildPheromoneMatrix(*ant);
+        // }
 
+        for(int i = 0; i < 30; i++) {
+            pheromoneMatrix.buildPheromoneMatrix(antColony.getAnt(i));
+        }
         int numberOfIterations = atoi(argv[6]);
         int numberOfAnts = atoi(argv[7]);
         Ant *bestAnt = new Ant();
@@ -161,7 +163,7 @@ int main(int argc, char* argv[]) {
         //file name is iteration_number_numOfInitialAnts_numOfIterations_numOfAnts_routes_wo_formula.csv
         string fileName = to_string(iterationNumber) + "_" + to_string(numOfAnts) + "_" + to_string(numberOfIterations) + "_" + to_string(numberOfAnts) + "_routes_wo_formula.csv";
         
-        writeToFile("/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_wo_formula_new_version/output/" + fileName , *bestAnt, depotManager.getDepot());
+        writeToFile("/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_wo_formula_new_version/output/test_results_wo_1/" + fileName , *bestAnt, depotManager.getDepot());
     }
     return 0;
 }

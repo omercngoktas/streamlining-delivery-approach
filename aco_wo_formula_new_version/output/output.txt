@@ -1,0 +1,8 @@
+Average distance for '500 ite 10 rep 500 in 30 normal first 100' is 589.1685858487089
+Average distance for '1000 ite 10 rep 500 initi 30 normal wo first 30 ants builds' is 591.1053903776565
+Average distance for 'test_results_wo_1' is 591.6964362205429
+Average distance for '500 it 10 rep 500 initi 75 ant 30 best wo' is 591.6964362205429
+Average distance for '500 iteration 10 repitation 500 initial 30 normal ants wo' is 595.0671929130297
+Average distance for 'test_results_wo' is 644.7980901902307
+Average distance for 'test_results' is 682.624441035025
+Best route is in folder '500 ite 10 rep 500 in 30 normal first 100' with distance 551.0998810983647

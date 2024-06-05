@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
     cout << "Number of iterations: " << numberOfIterations << endl;
     cout << "Number of ants: " << numberOfAnts << endl;
 
-    antColony.getAnts()[0]->displayRoutes();
+    // antColony.getAnts()[0]->displayRoutes();
 
     cout << "Size of pheromone matrix: " << pheromoneMatrix.getPheromoneMatrix().size() << endl;
     cout << "Size of heuristic matrix: " << heuristicMatrix.getHeuristicMatrix().size() << " x " << heuristicMatrix.getHeuristicMatrix()[0].size() << endl;
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
     //file name is iteration_number_numOfInitialAnts_numOfIterations_numOfAnts_routes_wo_formula.csv
     string fileName = to_string(iterationNumber) + "_" + to_string(numOfAnts) + "_" + to_string(numberOfIterations) + "_" + to_string(numberOfAnts) + "_routes_with_formula.csv";
     
-    writeToFile("/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_wo_formula_new_version/output/" + fileName , *bestAnt, depotManager.getDepot());
+    writeToFile("/Users/omercangoktas/Desktop/github/routing-and-distribution-optimization/aco_wo_formula_new_version/output/test_results/" + fileName , *bestAnt, depotManager.getDepot());
     }
     return 0;
 }
