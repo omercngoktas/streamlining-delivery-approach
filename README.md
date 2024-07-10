@@ -27,6 +27,8 @@ Through our optimization efforts, we have significantly improved route efficienc
 
 We have created visual representations of the optimized routes for each truck. These images illustrate the effectiveness of our approach by showing the streamlined paths.
 
+<img width="1174" alt="Ekran Resmi 2024-07-10 11 40 18" src="https://github.com/omercngoktas/streamlining-delivery-approach/assets/77095758/c31e2a11-75a4-47aa-a613-79b043fcad98">
+
 ## Benefits and Impact
 
 - **Efficiency:** Our optimized routes save time and reduce fuel consumption, contributing to cost savings.
