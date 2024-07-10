@@ -27,11 +27,7 @@ Through our optimization efforts, we have significantly improved route efficienc
 
 We have created visual representations of the optimized routes for each truck. These images illustrate the effectiveness of our approach by showing the streamlined paths.
 
-<img width="1174" alt="Ekran Resmi 2024-07-10 11 40 18" src="https://github.com/omercngoktas/streamlining-delivery-approach/assets/77095758/c31e2a11-75a4-47aa-a613-79b043fcad98">
-<img width="1174" alt="Ekran Resmi 2024-07-10 11 40 18" src="https://github.com/omercngoktas/streamlining-delivery-approach/assets/77095758/624d790c-fafa-4a19-9e5a-0a999897655c">
-<img width="1189" alt="Ekran Resmi 2024-07-10 11 40 33" src="https://github.com/omercngoktas/streamlining-delivery-approach/assets/77095758/6659edf8-978d-410f-88ab-b5a961ccd954">
-<img width="786" alt="Ekran Resmi 2024-07-10 11 40 49" src="https://github.com/omercngoktas/streamlining-delivery-approach/assets/77095758/823eddad-d89d-414c-94e4-de62dda763fd">
-
+![Untitled design (1)](https://github.com/omercngoktas/streamlining-delivery-approach/assets/77095758/4d85a95b-39da-46b4-af0b-392da3b8852d)
 
 
 ## Benefits and Impact
